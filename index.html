@@ -36,6 +36,24 @@
         header h1 { margin: 0 0 10px 0; font-size: 24px; color: #000; }
         header p { margin: 0 0 15px 0; font-weight: bold; color: #333; }
 
+        /* 📊 실시간 통계창 스타일 */
+        .status-board {
+            background-color: white;
+            border: 2px solid var(--pokemon-blue);
+            border-radius: 8px;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            font-weight: bold;
+            font-size: 15px;
+            color: #333;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .status-item span { color: var(--pokemon-blue); font-size: 18px; }
+        .status-item.percent span { color: #e3350d; font-size: 20px; }
+
         .btn-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .btn {
             background-color: var(--pokemon-blue); color: white; border: none;
@@ -115,7 +133,6 @@
 
         .seal-item.collected::after { opacity: 0; }
         
-        /* 💡 깔끔하게 한 줄로 조절한 출처 문구 스타일 */
         .footer-notice { margin-top: 20px; text-align: center; font-size: 12px; color: #555; font-weight: 500; }
     </style>
 </head>
@@ -124,6 +141,13 @@
     <header>
         <h1>포켓몬 30주년 기념 오리지널 아트웍 띠부씰 (100종)</h1>
         <p>씰을 클릭하여 보유 상태를 표시하세요! [어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
+        
+        <div class="status-board">
+            <div class="status-item">보유 갯수: <span id="count-collected">0</span>장</div>
+            <div class="status-item">남은 갯수: <span id="count-remaining">100</span>장</div>
+            <div class="status-item percent">수집률: <span id="collection-percent">0</span>%</div>
+        </div>
+
         <div class="btn-container">
             <button class="btn" onclick="allCollect()">전체 선택</button>
             <button class="btn" onclick="allClear()">전체 해제</button>
@@ -185,9 +209,32 @@
             item.addEventListener('click', () => { 
                 item.classList.toggle('collected'); 
                 saveCurrentStatus();
+                updateStatusBoard(); // 클릭할 때마다 상단 수치 실시간 갱신
             });
             gridContainer.appendChild(item);
         });
+
+        // 📊 수집 현황 수치들을 계산하고 화면에 반영하는 함수
+        function updateStatusBoard() {
+            const totalCount = pokemonList.length;
+            const collectedCount = document.querySelectorAll('.seal-item.collected').length;
+            const remainingCount = totalCount - collectedCount;
+            const percent = Math.round((collectedCount / totalCount) * 100);
+
+            document.getElementById('count-collected').innerText = collectedCount;
+            document.getElementById('count-remaining').innerText = remainingCount;
+            document.getElementById('collection-percent').innerText = percent;
+
+            // 🎉 100% 컬렉션 완성 시 축하 알림 효과
+            if (collectedCount === totalCount && totalCount > 0) {
+                setTimeout(() => {
+                    alert('🎉 대박! 포켓몬 30주년 띠부씰 도감을 완전히 마스터하셨습니다! 축하합니다! 👏');
+                }, 300);
+            }
+        }
+
+        // 초기 실행 시 화면에 현황판 수치 반영
+        updateStatusBoard();
 
         function getStatusString() {
             const items = document.querySelectorAll('.seal-item');
@@ -205,10 +252,12 @@
         function allCollect() { 
             document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); 
             saveCurrentStatus();
+            updateStatusBoard();
         }
         function allClear() { 
             document.querySelectorAll('.seal-item').forEach(item => item.classList.remove('collected')); 
             saveCurrentStatus();
+            updateStatusBoard();
         }
         
         function copyShareUrl() {
