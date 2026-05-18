@@ -241,7 +241,6 @@
             opacity: 0.7;
         }
 
-        /* 광고 영역 전용 레이아웃 스타일 */
         .ads-banner-zone {
             margin-top: 25px;
             width: 100%;
@@ -345,6 +344,18 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             cursor: pointer;
             user-select: none;
+            
+            /* 💡 [아이폰 꾹 누름 차단 핵심 1] iOS Safari 팝업 및 돋보기 차단 처리 */
+            -webkit-touch-callout: none !important;
+            -webkit-user-select: none !important;
+            user-select: none !important;
+        }
+
+        .seal-item .seal-image-box,
+        .seal-item .seal-name,
+        .seal-item .seal-badge {
+            /* 아이폰이 이미지 요소 자체를 길게 터치해서 팝업 여는 것 근본 차단 */
+            pointer-events: none !important; 
         }
 
         .seal-item.hide-by-filter {
@@ -603,6 +614,7 @@
                 changeSealCount(index, 1);
             });
 
+            // PC 우클릭 대응
             item.oncontextmenu = function(e) {
                 if (isLocked) return true;
                 e.preventDefault();
@@ -610,9 +622,14 @@
                 return false;
             };
 
+            // 모바일 롱탭 터치 대응
             let touchTimer;
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
+                
+                // 💡 [아이폰 꾹 누름 차단 핵심 2] 컨텍스트 브라우저 기본 메뉴 팝업 생성 동작을 원천 차단
+                item.oncontextmenu = function(event) { event.preventDefault(); return false; };
+
                 touchTimer = setTimeout(() => {
                     changeSealCount(index, -1);
                     if(navigator.vibrate) navigator.vibrate(50);
@@ -621,6 +638,10 @@
 
             item.addEventListener('touchend', function() {
                 clearTimeout(touchTimer);
+            }, {passive: true});
+
+            item.addEventListener('touchmove', function() {
+                clearTimeout(touchTimer); // 스크롤 시 오작동 방지
             }, {passive: true});
 
             gridContainer.appendChild(item);
@@ -809,6 +830,7 @@
             });
         }
 
+        // 전체 문서 기준에서 편집 모드가 활성화되어 있을 때 우클릭 메뉴 뜨는 기본 팝업 강제 제어
         document.addEventListener('contextmenu', event => {
             if (!isLocked) event.preventDefault();
         });
