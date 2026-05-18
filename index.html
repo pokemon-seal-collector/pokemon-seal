@@ -60,7 +60,7 @@
             line-height: 1.4;
         }
 
-        /* 💡 트레이너 박스 구조 변경 (Flex로 완벽한 세로 정렬 고정) */
+        /* 트레이너 정보 표시 영역 */
         .user-box {
             margin-bottom: 18px;
             background: rgba(255, 255, 255, 0.85);
@@ -75,9 +75,14 @@
             font-size: 16px;
             font-weight: bold;
             color: #222;
+            position: relative;
+            z-index: 1; /* 배경 레이어 기준점 고정 */
         }
 
+        /* 💡 트레이너 글자가 흰색 배경 뒤로 안 숨도록 캡처 레이어 최상단 보정 */
         .user-box .label-text {
+            position: relative;
+            z-index: 3 !important; 
             margin-right: 6px;
             color: #222;
             flex-shrink: 0;
@@ -86,6 +91,7 @@
         /* 입력창과 캡처용 텍스트가 들어갈 래퍼 공간 */
         .input-container {
             position: relative;
+            z-index: 3 !important; /* 배경 위로 강제 노출 */
             width: 130px;
             height: 24px;
             display: flex;
@@ -101,7 +107,7 @@
             width: 100%;
             height: 100%;
             border: none;
-            background: transparent;
+            background: transparent !important;
             font-size: 16px;
             font-weight: bold;
             color: var(--pokemon-blue);
@@ -110,17 +116,17 @@
             margin: 0;
             text-align: center;
             font-family: inherit;
-            box-shadow: none;
+            box-shadow: none !important;
             outline: none;
             -webkit-appearance: none;
             box-sizing: border-box;
-            z-index: 2; /* 평소엔 위로 배치 */
+            z-index: 5; /* 평소 타이핑을 위해 가장 위 배치 */
         }
         .user-box input:focus {
             border-bottom-style: solid;
         }
 
-        /* 💡 캡처를 위해 대기하는 순수 텍스트 영역 (기본 상태에선 숨김) */
+        /* 캡처를 위해 대기하는 순수 텍스트 영역 */
         .user-box .capture-text-only {
             position: absolute;
             top: 0;
@@ -135,19 +141,19 @@
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            padding-bottom: 2px; /* 밑줄이 사라진 공간만큼 미세 패딩 보정 */
+            padding-bottom: 2px;
             opacity: 0;
-            z-index: 1;
+            z-index: 4;
         }
 
-        /* 💡 이미지 저장(캡처) 버튼 클릭 시 활성화되는 임시 스위칭 스타일 */
+        /* 이미지 저장(캡처) 버튼 클릭 시 활성화되는 임시 스위칭 스타일 */
         .user-box.is-capturing input {
-            opacity: 0 !important; /* input은 투명하게 숨김 */
-            z-index: 1 !important;
+            opacity: 0 !important;
+            z-index: 4 !important;
         }
         .user-box.is-capturing .capture-text-only {
-            opacity: 1 !important; /* 완벽하게 정렬된 텍스트 레이어를 출력 */
-            z-index: 2 !important;
+            opacity: 1 !important;
+            z-index: 5 !important;
         }
 
         .status-board {
@@ -440,7 +446,6 @@
             localStorage.setItem('pokemon_30th_seal', getStatusString());
         }
 
-        // 입력 시 실시간으로 데이터 저장 및 캡처 전용 텍스트에도 반영
         function saveUserId() {
             localStorage.setItem('pokemon_30th_user', userIdInput.value);
             captureTextView.innerText = userIdInput.value;
@@ -470,7 +475,7 @@
         }
 
         function saveAsImage() {
-            // 💡 캡처 시점에 완벽히 맞춘 텍스트 레이어로 전환 (input 숨김)
+            // 캡처 레이어 스위칭 가동
             userBoxContainer.classList.add('is-capturing');
             pageWrapper.classList.add('forced-pc-layout');
             
@@ -490,7 +495,7 @@
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
-                // 캡처 종료 후 원래 상태(타이핑 모드)로 깔끔하게 전환
+                // 원상복구
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
