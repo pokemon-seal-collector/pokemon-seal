@@ -105,7 +105,7 @@
             width: 100%;
             height: 100%;
             border: none;
-            background: transparent !important;
+            background: transparent !transparent;
             font-size: 16px;
             font-weight: bold;
             color: var(--pokemon-blue);
@@ -122,6 +122,12 @@
         }
         .user-box input:focus {
             border-bottom-style: solid;
+        }
+        
+        /* 💡 잠금 상태일 때 인풋 스타일 조절 (밑줄 없앰) */
+        .user-box input:disabled {
+            border-bottom: none;
+            color: #444;
         }
 
         .user-box .capture-text-only {
@@ -187,6 +193,7 @@
             font-size: 20px; 
         }
 
+        /* 조작 버튼 컨테이너 */
         .btn-container { 
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -196,6 +203,22 @@
             margin: 0 auto;
         }
         
+        /* 💡 수정 활성화/잠금 토글 버튼 전용 스타일 */
+        .btn-toggle {
+            grid-column: span 2;
+            background-color: #fff;
+            color: #222;
+            border: 2px solid var(--pokemon-blue);
+            font-size: 15px;
+            padding: 10px;
+            margin-bottom: 4px;
+        }
+        .btn-toggle.active {
+            background-color: #fffbdf;
+            border-color: var(--pokemon-red);
+            color: var(--pokemon-red);
+        }
+
         .btn {
             background-color: var(--pokemon-blue); 
             color: white; 
@@ -214,6 +237,12 @@
         .btn:active { transform: scale(0.98); }
         .btn.save { background-color: var(--pokemon-red); }
         .btn.share { background-color: var(--pokemon-green); }
+        /* 편집 비활성화 시 일반 기능 버튼 시각적 피드백 */
+        .btn:disabled {
+            background-color: #bbb !important;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
 
         #capture-area {
             background-color: var(--pokemon-yellow);
@@ -232,6 +261,12 @@
             background-color: white;
             padding: 12px;
             border-radius: 8px;
+            position: relative;
+        }
+        
+        /* 💡 잠금(화면 홀드) 상태일 때 그리드 전체 터치 차단 막 생성 */
+        .grid-container.locked .seal-item {
+            cursor: default;
         }
 
         /* 태블릿 및 모바일 화면 대응 */
@@ -304,7 +339,7 @@
         
         .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666; font-weight: 500; }
 
-        /* 💡 아이폰(iOS) 호환성을 위한 이미지 팝업창(모달) 스타일 */
+        /* 아이폰(iOS) 호환성을 위한 이미지 팝업창(모달) 스타일 */
         .image-modal {
             display: none;
             position: fixed;
@@ -366,12 +401,15 @@
             <div class="user-box" id="user-box-container">
                 <span class="label-text">트레이너 :</span>
                 <div class="input-container">
-                    <input type="text" id="user-id" value="지우" maxlength="10" oninput="saveUserId()" placeholder="아이디 입력">
+                    <input type="text" id="user-id" value="지우" maxlength="10" oninput="saveUserId()" placeholder="아이디 입력" disabled>
                     <span class="capture-text-only" id="capture-text-view">지우</span>
                 </div>
             </div>
 
-            <p>씰을 클릭하여 보유 상태를 표시하세요!<br>[ 어두운 곳 = 미획득 / 밝은 곳 = 획득 ]</p>
+            <p>
+                <span data-html2canvas-ignore="true">씰을 클릭하여 보유 상태를 표시하세요!<br></span>
+                <span>[ 어두운 곳 = 미획득 / 밝은 곳 = 획득 ]</span>
+            </p>
             
             <div class="status-board">
                 <div class="status-item">보유 갯수<span id="count-collected">0</span></div>
@@ -380,15 +418,17 @@
             </div>
 
             <div class="btn-container" data-html2canvas-ignore="true">
-                <button class="btn" onclick="allCollect()">전체 선택</button>
-                <button class="btn" onclick="allClear()">전체 해제</button>
+                <button class="btn btn-toggle" id="edit-toggle-btn" onclick="toggleEditMode()">🔒 현재 상태: 잠금 (클릭/수정 불가)</button>
+                
+                <button class="btn" id="btn-all-collect" onclick="allCollect()" disabled>전체 선택</button>
+                <button class="btn" id="btn-all-clear" onclick="allClear()" disabled>전체 해제</button>
                 <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
                 <button class="btn share" onclick="copyShareUrl()">현황 링크 복사</button>
             </div>
         </header>
 
         <div id="capture-area">
-            <div class="grid-container" id="seal-grid"></div>
+            <div class="grid-container locked" id="seal-grid"></div>
             <div class="footer-notice">출처 : 포사모 도감 이미지 활용</div>
         </div>
     </div>
@@ -420,6 +460,9 @@
         const userBoxContainer = document.getElementById('user-box-container');
         const pageWrapper = document.getElementById('page-wrapper');
         
+        // 홀드 모드 여부 변수 (true = 잠금 상태 / false = 수정 모드)
+        let isLocked = true;
+
         const urlParams = new URLSearchParams(window.location.search);
         const urlData = urlParams.get('data');
         const urlUser = urlParams.get('user');
@@ -463,13 +506,42 @@
                 <div class="seal-name">${name}</div>
             `;
             
+            // 💡 클릭 이벤트 발생 시 잠금 여부를 먼저 체크하도록 설계 조절
             item.addEventListener('click', () => { 
+                if (isLocked) return; // 🔒 잠겨있으면 작동 금지!
                 item.classList.toggle('collected'); 
                 saveCurrentStatus();
                 updateStatusBoard();
             });
             gridContainer.appendChild(item);
         });
+
+        // 💡 홀드-수정 모드 스위칭 스크립트 함수
+        function toggleEditMode() {
+            const toggleBtn = document.getElementById('edit-toggle-btn');
+            const btnCollect = document.getElementById('btn-all-collect');
+            const btnClear = document.getElementById('btn-all-clear');
+
+            isLocked = !isLocked;
+
+            if (isLocked) {
+                // 🔒 잠금 활성화 모드
+                gridContainer.classList.add('locked');
+                userIdInput.disabled = true; // 이름 수정 차단
+                toggleBtn.classList.remove('active');
+                toggleBtn.innerText = "🔒 현재 상태: 잠금 (클릭/수정 불가)";
+                btnCollect.disabled = true;
+                btnClear.disabled = true;
+            } else {
+                // ✏️ 수정 활성화 모드
+                gridContainer.classList.remove('locked');
+                userIdInput.disabled = false; // 이름 수정 허용
+                toggleBtn.classList.add('active');
+                toggleBtn.innerText = "✏️ 현재 상태: 편집 중 (클릭/수정 가능)";
+                btnCollect.disabled = false;
+                btnClear.disabled = false;
+            }
+        }
 
         function updateStatusBoard() {
             const totalCount = pokemonList.length;
@@ -509,11 +581,13 @@
         }
 
         function allCollect() { 
+            if (isLocked) return;
             document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); 
             saveCurrentStatus();
             updateStatusBoard();
         }
         function allClear() { 
+            if (isLocked) return;
             document.querySelectorAll('.seal-item').forEach(item => item.classList.remove('collected')); 
             saveCurrentStatus();
             updateStatusBoard();
@@ -548,15 +622,12 @@
                 const imgData = canvas.toDataURL('image/png');
                 const username = userIdInput.value.trim() || '포켓몬';
                 
-                // 💡 아이폰/아이패드(iOS) 운영체제 판별 검사
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
                 if (isIOS) {
-                    // 아이폰 계열은 직접 다운로드가 불가능하므로 모달 팝업으로 우회 처리
                     document.getElementById('screenshot-img').src = imgData;
                     document.getElementById('save-modal').style.display = 'flex';
                 } else {
-                    // 안드로이드, PC 등 일반 환경은 기존처럼 깔끔하게 바로 파일 자동 다운로드
                     const link = document.createElement('a');
                     link.download = `포켓몬_30주년_띠부씰_도감_${username}.png`;
                     link.href = imgData;
@@ -574,7 +645,6 @@
             });
         }
 
-        // 모달창 닫기 함수
         function closeModal() {
             document.getElementById('save-modal').style.display = 'none';
         }
