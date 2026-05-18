@@ -114,7 +114,9 @@
         }
 
         .seal-item.collected::after { opacity: 0; }
-        .footer-notice { margin-top: 20px; text-align: center; font-size: 12px; color: #444; line-height: 1.6; font-weight: 500; }
+        
+        /* 💡 깔끔하게 한 줄로 조절한 출처 문구 스타일 */
+        .footer-notice { margin-top: 20px; text-align: center; font-size: 12px; color: #555; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -132,10 +134,7 @@
 
     <div id="capture-area">
         <div class="grid-container" id="seal-grid"></div>
-        <div class="footer-notice">
-            제작 : 포사모 (네이버 카페) | https://cafe.naver.com/pokemonmezastar <br>
-            @포켓몬을 사랑하는 모임 - 자녀를 키우는 부모들의 놀이터
-        </div>
+        <div class="footer-notice">출처 : 포사모 도감 이미지 활용</div>
     </div>
 
     <script>
@@ -153,7 +152,6 @@
 
         const gridContainer = document.getElementById('seal-grid');
         
-        // URL 파라미터 또는 로컬 스토리지에서 데이터 읽어오기
         const urlParams = new URLSearchParams(window.location.search);
         const urlData = urlParams.get('data');
         let savedData = [];
@@ -169,7 +167,6 @@
             const item = document.createElement('div');
             item.className = 'seal-item';
             
-            // 초기 상태 세팅 (저장된 데이터가 있으면 반영)
             if (savedData[index] === '1') {
                 item.classList.add('collected');
             }
@@ -187,12 +184,11 @@
             
             item.addEventListener('click', () => { 
                 item.classList.toggle('collected'); 
-                saveCurrentStatus(); // 클릭할 때마다 브라우저에 자동 저장
+                saveCurrentStatus();
             });
             gridContainer.appendChild(item);
         });
 
-        // 현재 수집 상태를 배열 문자열로 추출 (획득: 1, 미획득: 0)
         function getStatusString() {
             const items = document.querySelectorAll('.seal-item');
             const status = [];
@@ -202,7 +198,6 @@
             return status.join(',');
         }
 
-        // 브라우저 로컬 저장소에 저장하는 함수
         function saveCurrentStatus() {
             localStorage.setItem('pokemon_30th_seal', getStatusString());
         }
@@ -216,7 +211,6 @@
             saveCurrentStatus();
         }
         
-        // 현재 현황을 포함한 주소를 복사하는 함수
         function copyShareUrl() {
             const statusStr = getStatusString();
             const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}`;
@@ -224,7 +218,6 @@
             navigator.clipboard.writeText(shareUrl).then(() => {
                 alert('현재 수집 현황이 담긴 링크가 복사되었습니다! 카톡이나 메모장에 붙여넣어 활용하세요.');
             }).catch(err => {
-                // 구형 브라우저 대응용 임시 주소창 노출
                 prompt('아래 링크를 전체 복사해서 공유하세요:', shareUrl);
             });
         }
