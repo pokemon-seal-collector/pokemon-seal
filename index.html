@@ -60,14 +60,11 @@
             line-height: 1.4;
         }
 
-        /* 트레이너 정보 표시 영역 최적화 */
+        /* 💡 트레이너 박스 구조 변경 (Flex로 완벽한 세로 정렬 고정) */
         .user-box {
             margin-bottom: 18px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #222;
             background: rgba(255, 255, 255, 0.85);
-            padding: 8px 16px;
+            padding: 0 16px;
             border-radius: 20px;
             display: inline-flex;
             align-items: center;
@@ -75,51 +72,82 @@
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             height: 38px;
             box-sizing: border-box;
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
         }
 
-        .user-box span.label-text {
-            display: inline-block;
-            line-height: 20px;
-            height: 20px;
+        .user-box .label-text {
+            margin-right: 6px;
+            color: #222;
+            flex-shrink: 0;
         }
         
+        /* 입력창과 캡처용 텍스트가 들어갈 래퍼 공간 */
+        .input-container {
+            position: relative;
+            width: 130px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 웹 화면에서 직접 타이핑하는 실제 Input */
         .user-box input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             border: none;
             background: transparent;
             font-size: 16px;
             font-weight: bold;
             color: var(--pokemon-blue);
             border-bottom: 2px dashed var(--pokemon-blue);
-            padding: 0 4px;
+            padding: 0;
             margin: 0;
             text-align: center;
-            width: 130px;
             font-family: inherit;
-            height: 20px;
-            line-height: 20px;
             box-shadow: none;
             outline: none;
             -webkit-appearance: none;
             box-sizing: border-box;
+            z-index: 2; /* 평소엔 위로 배치 */
         }
         .user-box input:focus {
             border-bottom-style: solid;
         }
 
-        /* 💡 캡처 시 노출되는 텍스트 전용 스타일 (정렬 및 위치 고정용) */
-        .capture-text-view {
+        /* 💡 캡처를 위해 대기하는 순수 텍스트 영역 (기본 상태에선 숨김) */
+        .user-box .capture-text-only {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             font-size: 16px;
             font-weight: bold;
             color: var(--pokemon-blue);
-            padding: 0 4px;
-            margin: 0;
             text-align: center;
-            width: 130px;
-            display: inline-block;
-            height: 20px;
-            line-height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-sizing: border-box;
-            vertical-align: middle;
+            padding-bottom: 2px; /* 밑줄이 사라진 공간만큼 미세 패딩 보정 */
+            opacity: 0;
+            z-index: 1;
+        }
+
+        /* 💡 이미지 저장(캡처) 버튼 클릭 시 활성화되는 임시 스위칭 스타일 */
+        .user-box.is-capturing input {
+            opacity: 0 !important; /* input은 투명하게 숨김 */
+            z-index: 1 !important;
+        }
+        .user-box.is-capturing .capture-text-only {
+            opacity: 1 !important; /* 완벽하게 정렬된 텍스트 레이어를 출력 */
+            z-index: 2 !important;
         }
 
         .status-board {
@@ -282,8 +310,9 @@
             
             <div class="user-box" id="user-box-container">
                 <span class="label-text">트레이너 :</span>
-                <div id="user-id-wrapper" style="display: inline-block; vertical-align: middle;">
+                <div class="input-container">
                     <input type="text" id="user-id" value="지우" maxlength="10" oninput="saveUserId()" placeholder="아이디 입력">
+                    <span class="capture-text-only" id="capture-text-view">지우</span>
                 </div>
             </div>
 
@@ -324,7 +353,8 @@
 
         const gridContainer = document.getElementById('seal-grid');
         const userIdInput = document.getElementById('user-id');
-        const userIdWrapper = document.getElementById('user-id-wrapper');
+        const captureTextView = document.getElementById('capture-text-view');
+        const userBoxContainer = document.getElementById('user-box-container');
         const pageWrapper = document.getElementById('page-wrapper');
         
         const urlParams = new URLSearchParams(window.location.search);
@@ -334,10 +364,14 @@
 
         if (urlUser) {
             userIdInput.value = decodeURIComponent(urlUser);
+            captureTextView.innerText = userIdInput.value;
             localStorage.setItem('pokemon_30th_user', userIdInput.value);
         } else {
             const localUser = localStorage.getItem('pokemon_30th_user');
-            if (localUser) userIdInput.value = localUser;
+            if (localUser) {
+                userIdInput.value = localUser;
+                captureTextView.innerText = localUser;
+            }
         }
 
         if (urlData) {
@@ -406,8 +440,10 @@
             localStorage.setItem('pokemon_30th_seal', getStatusString());
         }
 
+        // 입력 시 실시간으로 데이터 저장 및 캡처 전용 텍스트에도 반영
         function saveUserId() {
             localStorage.setItem('pokemon_30th_user', userIdInput.value);
+            captureTextView.innerText = userIdInput.value;
         }
 
         function allCollect() { 
@@ -434,18 +470,10 @@
         }
 
         function saveAsImage() {
-            const currentName = userIdInput.value;
-
-            // 💡 [핵심해결] 캡처 직전 input 요소를 완벽히 정렬된 span 텍스트 요소로 임시 교체
-            const textView = document.createElement('span');
-            textView.className = 'capture-text-view';
-            textView.innerText = currentName;
-            
-            userIdWrapper.innerHTML = '';
-            userIdWrapper.appendChild(textView);
-
-            // PC 12열 레이아웃 강제 고정
+            // 💡 캡처 시점에 완벽히 맞춘 텍스트 레이어로 전환 (input 숨김)
+            userBoxContainer.classList.add('is-capturing');
             pageWrapper.classList.add('forced-pc-layout');
+            
             const originalWidth = pageWrapper.style.width;
             pageWrapper.style.width = '1200px';
 
@@ -457,28 +485,21 @@
                 logging: false
             }).then(canvas => {
                 const link = document.createElement('a');
-                const username = currentName.trim() || '포켓몬';
+                const username = userIdInput.value.trim() || '포켓몬';
                 link.download = `포켓몬_30주년_띠부씰_도감_${username}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
-                // 캡처 완벽 종료 후 원래의 편리한 수정을 위한 input 형태로 복구
-                restoreInput(currentName, originalWidth);
+                // 캡처 종료 후 원래 상태(타이핑 모드)로 깔끔하게 전환
+                userBoxContainer.classList.remove('is-capturing');
+                pageWrapper.classList.remove('forced-pc-layout');
+                pageWrapper.style.width = originalWidth;
             }).catch(err => {
                 console.error("캡처 중 오류 발생:", err);
-                restoreInput(currentName, originalWidth);
+                userBoxContainer.classList.remove('is-capturing');
+                pageWrapper.classList.remove('forced-pc-layout');
+                pageWrapper.style.width = originalWidth;
             });
-        }
-
-        // 상태를 원래대로 완벽하게 돌려놓는 함수
-        function restoreInput(nameValue, originalWidth) {
-            userIdWrapper.innerHTML = `<input type="text" id="user-id" value="${nameValue}" maxlength="10" oninput="saveUserId()" placeholder="아이디 입력">`;
-            
-            // 전역 변수로 쓰고 있는 userIdInput 참조점 갱신
-            window.userIdInput = document.getElementById('user-id');
-            
-            pageWrapper.classList.remove('forced-pc-layout');
-            pageWrapper.style.width = originalWidth;
         }
     </script>
 </body>
