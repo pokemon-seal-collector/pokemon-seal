@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>포켓몬 30주년 아트웍 스페셜 띠부씰 도감</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --pokemon-yellow: #FFDE00;
+            --pokemon-blue: #3B4CCA;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            background-color: var(--pokemon-yellow);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        header h1 { margin: 0 0 10px 0; font-size: 24px; color: #000; }
+        header p { margin: 0 0 15px 0; font-weight: bold; color: #333; }
+
+        .btn-container { display: flex; gap: 10px; justify-content: center; }
+        .btn {
+            background-color: var(--pokemon-blue); color: white; border: none;
+            padding: 10px 20px; font-size: 14px; font-weight: bold;
+            border-radius: 5px; cursor: pointer; transition: background 0.2s;
+        }
+        .btn:hover { background-color: #2a3795; }
+        .btn.save { background-color: #e3350d; }
+        .btn.save:hover { background-color: #b32808; }
+
+        #capture-area {
+            background-color: var(--pokemon-yellow);
+            padding: 20px;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 1200px;
+            box-sizing: border-box;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 6px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 1024px) { .grid-container { grid-template-columns: repeat(8, 1fr); } }
+        @media (max-width: 768px) { .grid-container { grid-template-columns: repeat(6, 1fr); } }
+        @media (max-width: 480px) { .grid-container { grid-template-columns: repeat(4, 1fr); } }
+
+        .seal-item {
+            position: relative;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            overflow: hidden;
+            background: #fff;
+            aspect-ratio: 1 / 1.35; 
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 5px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .seal-image-box {
+            width: 100%;
+            height: 84%;
+            background-image: url('bg-grid.jpg'); 
+            background-size: 1200% 900%; 
+            background-repeat: no-repeat;
+        }
+
+        .seal-name {
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 5px;
+            color: #333;
+            text-align: center;
+            word-break: keep-all;
+            height: 14px;
+            line-height: 14px;
+        }
+
+        .seal-item::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(1.5px);
+            opacity: 1; transition: opacity 0.15s ease; pointer-events: none;
+        }
+
+        .seal-item.collected::after { opacity: 0; }
+        .footer-notice { margin-top: 20px; text-align: center; font-size: 12px; color: #444; line-height: 1.6; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>포켓몬 30주년 기념 오리지널 아트웍 띠부씰 (100종)</h1>
+        <p>씰을 클릭하여 보유 상태를 표시하세요! [어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
+        <div class="btn-container">
+            <button class="btn" onclick="allCollect()">전체 선택</button>
+            <button class="btn" onclick="allClear()">전체 해제</button>
+            <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
+        </div>
+    </header>
+
+    <div id="capture-area">
+        <div class="grid-container" id="seal-grid"></div>
+        <div class="footer-notice">
+            제작 : 포사모 (네이버 카페) | https://cafe.naver.com/pokemonmezastar <br>
+            @포켓몬을 사랑하는 모임 - 자녀를 키우는 부모들의 놀이터
+        </div>
+    </div>
+
+    <script>
+        // 💡 요청하신 순서(롱스톤 -> 찌리리공, 붐볼 / 캥카 -> 별가사리, 아쿠스타)를 완벽히 조율한 100종 명단
+        const pokemonList = [
+            "이상해씨", "이상해풀", "이상해꽃", "파이리", "리자드", "리자몽", "꼬부기", "어니부기", "거북왕", "캐터피", "단데기", "버터플",
+            "뿔충이", "딱충이", "독침붕", "구구", "피죤", "피죤투", "꼬렛", "레트라", "아보", "아보크", "피카츄", "라이츄",
+            "식스테일", "나인테일", "푸린", "푸크린", "주뱃", "골뱃", "나옹", "페르시온", "고라파덕", "골덕", "망키", "성원숭",
+            "가디", "윈디", "케이시", "윤겔라", "후딘", "알통몬", "근육몬", "괴력몬", "모다피", "우츠동", "우츠보트", "꼬마돌",
+            "데구리", "딱구리", "포니타", "날씽이", "야돈", "야도란", "코일", "레어코일", "파오리", "두두", "두트리오", "질퍽이",
+            "질뻐기", "고오스", "고우스트", "팬텀", "롱스톤", "찌리리공", "붐볼", "탕구리", "텅구리", "또가스", "또도가스", "뿔카노",
+            "코뿌리", "럭키", "캥카", "별가사리", "아쿠스타", "스라크", "에레브", "마그마", "쁘사이저", "켄타로스", "잉어킹", "갸라도스",
+            "라프라스", "메타몽", "이브이", "샤미드", "쥬피썬더", "부스터", "폴리곤", "프테라", "잠만보", "프리져", "썬더", "파이어",
+            "미뇽", "신뇽", "망나뇽", "뮤츠"
+        ];
+
+        const gridContainer = document.getElementById('seal-grid');
+
+        pokemonList.forEach((name, index) => {
+            const item = document.createElement('div');
+            item.className = 'seal-item';
+            
+            const col = index % 12;
+            const row = Math.floor(index / 12);
+            
+            const posX = col * (100 / 11);
+            const posY = row * (100 / 8); 
+
+            item.innerHTML = `
+                <div class="seal-image-box" style="background-position: ${posX}% ${posY}%;"></div>
+                <div class="seal-name">${name}</div>
+            `;
+            
+            item.addEventListener('click', () => { item.classList.toggle('collected'); });
+            gridContainer.appendChild(item);
+        });
+
+        function allCollect() { document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); }
+        function allClear() { document.querySelectorAll('.seal-item').forEach(item => item.classList.remove('collected')); }
+        
+        function saveAsImage() {
+            const captureArea = document.getElementById('capture-area');
+            html2canvas(captureArea, {
+                useCORS: true,
+                scale: 2, 
+                backgroundColor: '#FFDE00'
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = '포켓몬_30주년_띠부씰_도감_현황.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
