@@ -15,7 +15,8 @@
 
         body {
             font-family: 'Noto Sans KR', sans-serif;
-            background-color: #f5f5f5;
+            background-color: #f5f5f5 !important;
+            color: #333333 !important;
             margin: 0;
             padding: 15px;
             display: flex;
@@ -47,7 +48,7 @@
         header h1 { 
             margin: 0 0 12px 0; 
             font-size: 22px; 
-            color: #111; 
+            color: #111 !important; 
             word-break: keep-all;
             line-height: 1.3;
         }
@@ -56,14 +57,14 @@
             margin: 0 0 18px 0; 
             font-size: 13px; 
             font-weight: 500; 
-            color: #444; 
+            color: #444 !important; 
             word-break: keep-all;
             line-height: 1.5;
         }
 
         .user-box {
             margin-bottom: 16px;
-            background: rgba(255, 255, 255, 0.85);
+            background: rgba(255, 255, 255, 0.85) !important;
             padding: 0 16px;
             border-radius: 20px;
             display: inline-flex;
@@ -74,7 +75,7 @@
             box-sizing: border-box;
             font-size: 16px;
             font-weight: bold;
-            color: #222;
+            color: #222 !important;
             position: relative;
             z-index: 1;
         }
@@ -83,7 +84,7 @@
             position: relative;
             z-index: 3 !important; 
             margin-right: 6px;
-            color: #222;
+            color: #222 !important;
             flex-shrink: 0;
         }
         
@@ -107,7 +108,7 @@
             background: transparent !important;
             font-size: 16px;
             font-weight: bold;
-            color: var(--pokemon-blue);
+            color: var(--pokemon-blue) !important;
             border-bottom: 2px dashed var(--pokemon-blue);
             padding: 0;
             margin: 0;
@@ -122,7 +123,7 @@
         
         .user-box input:disabled {
             border-bottom: none;
-            color: #444;
+            color: #444 !important;
         }
 
         .user-box .capture-text-only {
@@ -133,7 +134,7 @@
             height: 100%;
             font-size: 16px;
             font-weight: bold;
-            color: var(--pokemon-blue);
+            color: var(--pokemon-blue) !important;
             text-align: center;
             display: flex;
             align-items: center;
@@ -154,7 +155,7 @@
         }
 
         .status-board {
-            background-color: white;
+            background-color: white !important;
             border: 2px solid var(--pokemon-blue);
             border-radius: 10px;
             padding: 12px;
@@ -173,7 +174,7 @@
             align-items: center;
             font-size: 11px;
             font-weight: 700;
-            color: #555;
+            color: #555 !important;
             border-right: 1px solid #eee;
         }
         .status-item:last-child { border-right: none; }
@@ -181,10 +182,10 @@
         .status-item span { 
             font-size: 16px; 
             margin-top: 4px;
-            color: var(--pokemon-blue); 
+            color: var(--pokemon-blue) !important; 
         }
         .status-item.percent span { 
-            color: var(--pokemon-red); 
+            color: var(--pokemon-red) !important; 
             font-size: 18px; 
         }
 
@@ -199,17 +200,17 @@
         
         .btn-toggle {
             grid-column: span 2;
-            background-color: #fff;
-            color: #222;
+            background-color: #fff !important;
+            color: #222 !important;
             border: 2px solid var(--pokemon-blue);
             font-size: 15px;
             padding: 10px;
             margin-bottom: 4px;
         }
         .btn-toggle.active {
-            background-color: #fffbdf;
+            background-color: #fffbdf !important;
             border-color: var(--pokemon-red);
-            color: var(--pokemon-red);
+            color: var(--pokemon-red) !important;
         }
 
         .btn-clear-all {
@@ -219,7 +220,7 @@
 
         .btn {
             background-color: var(--pokemon-blue); 
-            color: white; 
+            color: white !important; 
             border: none;
             padding: 12px 10px; 
             font-size: 14px; 
@@ -253,7 +254,7 @@
         }
         .ads-banner-zone .ad-label {
             font-size: 10px;
-            color: #888;
+            color: #888 !important;
             margin-bottom: 6px;
             font-weight: bold;
             text-align: center;
@@ -267,7 +268,7 @@
         .filter-container {
             display: flex;
             width: 100%;
-            background: #e8e8e8;
+            background: #e8e8e8 !important;
             padding: 4px;
             border-radius: 8px;
             margin-bottom: 12px;
@@ -280,15 +281,15 @@
             padding: 8px 5px;
             font-size: 13px;
             font-weight: bold;
-            color: #555;
+            color: #555 !important;
             cursor: pointer;
             border-radius: 6px;
             transition: all 0.15s ease;
             text-align: center;
         }
         .filter-tab.active {
-            background: white;
-            color: var(--pokemon-blue);
+            background: white !important;
+            color: var(--pokemon-blue) !important;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
@@ -305,7 +306,7 @@
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 6px;
-            background-color: white;
+            background-color: white !important;
             padding: 12px;
             border-radius: 8px;
             position: relative;
@@ -333,7 +334,7 @@
             border: 1px solid #e8e8e8;
             border-radius: 8px;
             overflow: hidden;
-            background: #fff;
+            background: #fff !important;
             aspect-ratio: 1 / 1.35; 
             display: flex;
             flex-direction: column;
@@ -344,8 +345,6 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             cursor: pointer;
             user-select: none;
-            
-            /* 💡 [아이폰 꾹 누름 차단 핵심 1] iOS Safari 팝업 및 돋보기 차단 처리 */
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
@@ -354,7 +353,6 @@
         .seal-item .seal-image-box,
         .seal-item .seal-name,
         .seal-item .seal-badge {
-            /* 아이폰이 이미지 요소 자체를 길게 터치해서 팝업 여는 것 근본 차단 */
             pointer-events: none !important; 
         }
 
@@ -374,7 +372,7 @@
             font-size: 11px;
             font-weight: bold;
             margin-top: 4px;
-            color: #333;
+            color: #333 !important;
             text-align: center;
             word-break: keep-all;
             height: 14px;
@@ -399,7 +397,7 @@
             top: 4px;
             right: 4px;
             background-color: var(--pokemon-red);
-            color: white;
+            color: white !important;
             font-size: 10px;
             font-weight: 850;
             padding: 2px 5px;
@@ -413,7 +411,7 @@
             display: block;
         }
         
-        .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666; font-weight: 500; }
+        .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666 !important; font-weight: 500; }
 
         .image-modal {
             display: none;
@@ -428,7 +426,7 @@
             box-sizing: border-box;
         }
         .image-modal .modal-notice {
-            color: #fff;
+            color: #fff !important;
             font-size: 14px;
             font-weight: bold;
             margin-bottom: 12px;
@@ -446,7 +444,7 @@
             overflow-y: auto;
             border-radius: 8px;
             box-shadow: 0 5px 20px rgba(0,0,0,0.5);
-            background: #f5f5f5;
+            background: #f5f5f5 !important;
         }
         .image-modal img {
             width: 100%;
@@ -455,8 +453,8 @@
         }
         .image-modal .close-btn {
             margin-top: 15px;
-            background: #fff;
-            color: #333;
+            background: #fff !important;
+            color: #333 !important;
             border: none;
             padding: 10px 24px;
             font-size: 14px;
@@ -509,15 +507,11 @@
 
             <div class="grid-container locked" id="seal-grid"></div>
             
-            <div class="ads-banner-zone" data-html2canvas-ignore="true">
-                
-                <div style="margin-bottom: 20px;">
-                </div>
-
+            <div class="ads-banner-zone" id="ad-zone-container" data-html2canvas-ignore="true">
+                <div style="margin-bottom: 20px;"></div>
                 <div class="ad-label" style="border-top: 1px dashed #ccc; padding-top: 15px; width: 100%;">
                     파트너스 활동을 통해 일정액의 수수료를 제공받을 수 있음
                 </div>
-                
                 <script src="https://ads-partners.coupang.com/g.js"></script>
                 <script>
                     new PartnersCoupang.G({"id":990071,"template":"carousel","trackingCode":"AF3620651","width":"680","height":"140","tsource":""});
@@ -614,7 +608,6 @@
                 changeSealCount(index, 1);
             });
 
-            // PC 우클릭 대응
             item.oncontextmenu = function(e) {
                 if (isLocked) return true;
                 e.preventDefault();
@@ -622,27 +615,18 @@
                 return false;
             };
 
-            // 모바일 롱탭 터치 대응
             let touchTimer;
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
-                
-                // 💡 [아이폰 꾹 누름 차단 핵심 2] 컨텍스트 브라우저 기본 메뉴 팝업 생성 동작을 원천 차단
                 item.oncontextmenu = function(event) { event.preventDefault(); return false; };
-
                 touchTimer = setTimeout(() => {
                     changeSealCount(index, -1);
                     if(navigator.vibrate) navigator.vibrate(50);
                 }, 600); 
             }, {passive: true});
 
-            item.addEventListener('touchend', function() {
-                clearTimeout(touchTimer);
-            }, {passive: true});
-
-            item.addEventListener('touchmove', function() {
-                clearTimeout(touchTimer); // 스크롤 시 오작동 방지
-            }, {passive: true});
+            item.addEventListener('touchend', function() { clearTimeout(touchTimer); }, {passive: true});
+            item.addEventListener('touchmove', function() { clearTimeout(touchTimer); }, {passive: true});
 
             gridContainer.appendChild(item);
             renderSealState(item, index);
@@ -664,8 +648,11 @@
                 element.classList.remove('collected');
                 element.classList.remove('duplicate');
             }
-
-            refreshIndividualFilter(element, index);
+            
+            // 💡 [해결] 실시간 수량 조작 중 카드가 필터 때문에 즉시 뿅 사라져 눈을 어지럽히는 현상 제거
+            if (currentFilterMode === 'all') {
+                element.classList.remove('hide-by-filter');
+            }
         }
 
         function changeSealCount(index, amount) {
@@ -683,9 +670,9 @@
             updateStatusBoard();
         }
 
+        // 💡 [해결] 필터는 탭 메뉴를 '클릭하는 순간'에만 깔끔하게 정돈되도록 로직 분리
         function applyFilter(mode) {
             currentFilterMode = mode;
-            
             const tabs = document.querySelectorAll('.filter-tab');
             tabs.forEach(tab => tab.classList.remove('active'));
             
@@ -695,25 +682,19 @@
 
             const items = document.querySelectorAll('.seal-item');
             items.forEach((item, index) => {
-                refreshIndividualFilter(item, index);
+                const count = sealCounts[index];
+                item.classList.remove('hide-by-filter');
+                if (currentFilterMode === 'duplicate' && count < 2) {
+                    item.classList.add('hide-by-filter'); 
+                } else if (currentFilterMode === 'missing' && count > 0) {
+                    item.classList.add('hide-by-filter'); 
+                }
             });
-        }
-
-        function refreshIndividualFilter(element, index) {
-            const count = sealCounts[index];
-            element.classList.remove('hide-by-filter');
-
-            if (currentFilterMode === 'duplicate' && count < 2) {
-                element.classList.add('hide-by-filter'); 
-            } else if (currentFilterMode === 'missing' && count > 0) {
-                element.classList.add('hide-by-filter'); 
-            }
         }
 
         function toggleEditMode() {
             const toggleBtn = document.getElementById('edit-toggle-btn');
             const btnClear = document.getElementById('btn-all-clear');
-
             isLocked = !isLocked;
 
             if (isLocked) {
@@ -740,24 +721,12 @@
             document.getElementById('count-collected').innerText = collectedTypes + "종";
             document.getElementById('count-remaining').innerText = remainingTypes + "종";
             document.getElementById('collection-percent').innerText = percent + "%";
-
-            if (collectedTypes === totalTypes && totalTypes > 0) {
-                setTimeout(() => {
-                    alert('🎉 대박! 포켓몬 30주년 띠부씰 도감을 완전히 마스터하셨습니다! 축하합니다! 👏');
-                }, 300);
-            }
         }
 
         updateStatusBoard();
 
-        function getStatusString() {
-            return sealCounts.join(',');
-        }
-
-        function saveCurrentStatus() {
-            localStorage.setItem('pokemon_30th_seal_counts', getStatusString());
-        }
-
+        function getStatusString() { return sealCounts.join(','); }
+        function saveCurrentStatus() { localStorage.setItem('pokemon_30th_seal_counts', getStatusString()); }
         function saveUserId() {
             localStorage.setItem('pokemon_30th_user', userIdInput.value);
             captureTextView.innerText = userIdInput.value;
@@ -778,18 +747,18 @@
             const statusStr = getStatusString();
             const userStr = encodeURIComponent(userIdInput.value);
             const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}&user=${userStr}`;
-            
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('현재 중복 수량까지 포함된 수집 현황 링크가 복사되었습니다!');
-            }).catch(err => {
-                prompt('아래 링크를 전체 복사해서 공유하세요:', shareUrl);
-            });
+                alert('현재 수집 현황 링크가 복사되었습니다!');
+            }).catch(err => { prompt('아래 링크를 복사해서 공유하세요:', shareUrl); });
         }
 
         function saveAsImage() {
+            // 💡 [해결] 캡처 시작 전 광고 틀의 여백 자체를 완전히 일시 삭제하여 빈 공간 캡처 현상 방지
+            const adZone = document.getElementById('ad-zone-container');
+            if(adZone) adZone.style.display = 'none';
+
             userBoxContainer.classList.add('is-capturing');
             pageWrapper.classList.add('forced-pc-layout');
-            
             const originalWidth = pageWrapper.style.width;
             pageWrapper.style.width = '1200px';
 
@@ -802,13 +771,9 @@
             }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const username = userIdInput.value.trim() || '포켓몬';
-                
-                let filterLabel = "전체현황";
-                if(currentFilterMode === 'duplicate') filterLabel = "중복목록";
-                if(currentFilterMode === 'missing') filterLabel = "위시리스트";
+                let filterLabel = currentFilterMode === 'duplicate' ? "중복목록" : (currentFilterMode === 'missing' ? "위시리스트" : "전체현황");
 
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
                 if (isIOS) {
                     document.getElementById('screenshot-img').src = imgData;
                     document.getElementById('save-modal').style.display = 'flex';
@@ -819,25 +784,29 @@
                     link.click();
                 }
                 
+                // 후속 복구
+                if(adZone) adZone.style.display = 'flex';
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
             }).catch(err => {
-                console.error("캡처 중 오류 발생:", err);
+                if(adZone) adZone.style.display = 'flex';
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
             });
         }
 
-        // 전체 문서 기준에서 편집 모드가 활성화되어 있을 때 우클릭 메뉴 뜨는 기본 팝업 강제 제어
-        document.addEventListener('contextmenu', event => {
-            if (!isLocked) event.preventDefault();
+        // 💡 [해결] 실수로 모바일에서 아래로 스와이프해 새로고침되거나 페이지 이탈하는 버그 차단막
+        window.addEventListener('beforeunload', (event) => {
+            if (sealCounts.some(c => c > 0)) {
+                event.preventDefault();
+                event.returnValue = '';
+            }
         });
 
-        function closeModal() {
-            document.getElementById('save-modal').style.display = 'none';
-        }
+        document.addEventListener('contextmenu', event => { if (!isLocked) event.preventDefault(); });
+        function closeModal() { document.getElementById('save-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
