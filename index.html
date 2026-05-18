@@ -9,89 +9,149 @@
         :root {
             --pokemon-yellow: #FFDE00;
             --pokemon-blue: #3B4CCA;
+            --pokemon-red: #E3350D;
+            --pokemon-green: #28A745;
         }
 
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #f5f5f5;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            -webkit-tap-highlight-color: transparent;
         }
 
         header {
             text-align: center;
             background-color: var(--pokemon-yellow);
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             width: 100%;
             max-width: 1200px;
             margin-bottom: 20px;
             box-sizing: border-box;
         }
 
-        header h1 { margin: 0 0 10px 0; font-size: 24px; color: #000; }
-        header p { margin: 0 0 15px 0; font-weight: bold; color: #333; }
+        header h1 { 
+            margin: 0 0 8px 0; 
+            font-size: 22px; 
+            color: #111; 
+            word-break: keep-all;
+            line-height: 1.3;
+        }
+        header p { 
+            margin: 0 0 18px 0; 
+            font-size: 13px; 
+            font-weight: 500; 
+            color: #444; 
+            word-break: keep-all;
+            line-height: 1.4;
+        }
 
-        /* 📊 실시간 통계창 스타일 */
         .status-board {
             background-color: white;
             border: 2px solid var(--pokemon-blue);
-            border-radius: 8px;
-            padding: 12px 20px;
-            margin-bottom: 15px;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 18px;
             display: flex;
             justify-content: space-around;
             align-items: center;
-            font-weight: bold;
-            font-size: 15px;
-            color: #333;
+            gap: 5px;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
-        .status-item span { color: var(--pokemon-blue); font-size: 18px; }
-        .status-item.percent span { color: #e3350d; font-size: 20px; }
-
-        .btn-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
-        .btn {
-            background-color: var(--pokemon-blue); color: white; border: none;
-            padding: 10px 20px; font-size: 14px; font-weight: bold;
-            border-radius: 5px; cursor: pointer; transition: background 0.2s;
+        
+        .status-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #555;
+            border-right: 1px solid #eee;
         }
-        .btn:hover { background-color: #2a3795; }
-        .btn.save { background-color: #e3350d; }
-        .btn.save:hover { background-color: #b32808; }
-        .btn.share { background-color: #28a745; }
-        .btn.share:hover { background-color: #1e7e34; }
+        .status-item:last-child { border-right: none; }
+        
+        .status-item span { 
+            font-size: 18px; 
+            margin-top: 4px;
+            color: var(--pokemon-blue); 
+        }
+        .status-item.percent span { 
+            color: var(--pokemon-red); 
+            font-size: 20px; 
+        }
+
+        .btn-container { 
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        
+        .btn {
+            background-color: var(--pokemon-blue); 
+            color: white; 
+            border: none;
+            padding: 12px 10px; 
+            font-size: 14px; 
+            font-weight: bold;
+            border-radius: 8px; 
+            cursor: pointer; 
+            transition: background 0.15s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn.save { background-color: var(--pokemon-red); }
+        .btn.share { background-color: var(--pokemon-green); }
 
         #capture-area {
             background-color: var(--pokemon-yellow);
-            padding: 20px;
-            border-radius: 10px;
+            padding: 15px;
+            border-radius: 12px;
             width: 100%;
             max-width: 1200px;
             box-sizing: border-box;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
+        /* 💡 기본 PC 화면에서는 12열 격자 유지 */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
             gap: 6px;
             background-color: white;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
         }
 
+        /* 💡 태블릿 및 모바일 화면 대응 구간 세분화 */
         @media (max-width: 1024px) { .grid-container { grid-template-columns: repeat(8, 1fr); } }
         @media (max-width: 768px) { .grid-container { grid-template-columns: repeat(6, 1fr); } }
-        @media (max-width: 480px) { .grid-container { grid-template-columns: repeat(4, 1fr); } }
+        
+        /* 💡 모바일 화면(480px 이하)에서 무조건 시원하게 한 줄에 3개씩 뜨도록 고정! */
+        @media (max-width: 480px) { 
+            .grid-container { 
+                grid-template-columns: repeat(3, 1fr); 
+                gap: 6px; 
+                padding: 8px; 
+            } 
+        }
 
         .seal-item {
             position: relative;
-            border: 1px solid #ddd;
-            border-radius: 6px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
             overflow: hidden;
             background: #fff;
             aspect-ratio: 1 / 1.35; 
@@ -101,7 +161,7 @@
             justify-content: flex-end;
             padding: 5px;
             box-sizing: border-box;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             cursor: pointer;
             user-select: none;
         }
@@ -117,7 +177,7 @@
         .seal-name {
             font-size: 11px;
             font-weight: bold;
-            margin-top: 5px;
+            margin-top: 4px;
             color: #333;
             text-align: center;
             word-break: keep-all;
@@ -125,34 +185,39 @@
             line-height: 14px;
         }
 
+        /* 💡 3개 배치에 맞추어 모바일에서 글자가 흐리거나 작게 깨지지 않게 폰트 크기 최적화 */
+        @media (max-width: 480px) {
+            .seal-name { font-size: 11px; margin-top: 3px; }
+        }
+
         .seal-item::after {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0, 0, 0, 0.65); backdrop-filter: blur(1.5px);
+            background-color: rgba(0, 0, 0, 0.62); backdrop-filter: blur(1.2px);
             opacity: 1; transition: opacity 0.15s ease; pointer-events: none;
         }
 
         .seal-item.collected::after { opacity: 0; }
         
-        .footer-notice { margin-top: 20px; text-align: center; font-size: 12px; color: #555; font-weight: 500; }
+        .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666; font-weight: 500; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>포켓몬 30주년 기념 오리지널 아트웍 띠부씰 (100종)</h1>
-        <p>씰을 클릭하여 보유 상태를 표시하세요! [어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
+        <h1>포켓몬 30주년 기념<br>오리지널 아트웍 띠부씰 (100종)</h1>
+        <p>씰을 클릭하여 보유 상태를 표시하세요!<br>[어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
         
         <div class="status-board">
-            <div class="status-item">보유 갯수: <span id="count-collected">0</span>장</div>
-            <div class="status-item">남은 갯수: <span id="count-remaining">100</span>장</div>
-            <div class="status-item percent">수집률: <span id="collection-percent">0</span>%</div>
+            <div class="status-item">보유 갯수<span id="count-collected">0</span></div>
+            <div class="status-item">남은 갯수<span id="count-remaining">100</span></div>
+            <div class="status-item percent">수집률<span id="collection-percent">0</span></div>
         </div>
 
         <div class="btn-container">
             <button class="btn" onclick="allCollect()">전체 선택</button>
             <button class="btn" onclick="allClear()">전체 해제</button>
             <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
-            <button class="btn share" onclick="copyShareUrl()">현재 현황 링크 복사</button>
+            <button class="btn share" onclick="copyShareUrl()">현황 링크 복사</button>
         </div>
     </header>
 
@@ -209,23 +274,21 @@
             item.addEventListener('click', () => { 
                 item.classList.toggle('collected'); 
                 saveCurrentStatus();
-                updateStatusBoard(); // 클릭할 때마다 상단 수치 실시간 갱신
+                updateStatusBoard();
             });
             gridContainer.appendChild(item);
         });
 
-        // 📊 수집 현황 수치들을 계산하고 화면에 반영하는 함수
         function updateStatusBoard() {
             const totalCount = pokemonList.length;
             const collectedCount = document.querySelectorAll('.seal-item.collected').length;
             const remainingCount = totalCount - collectedCount;
             const percent = Math.round((collectedCount / totalCount) * 100);
 
-            document.getElementById('count-collected').innerText = collectedCount;
-            document.getElementById('count-remaining').innerText = remainingCount;
-            document.getElementById('collection-percent').innerText = percent;
+            document.getElementById('count-collected').innerText = collectedCount + "장";
+            document.getElementById('count-remaining').innerText = remainingCount + "장";
+            document.getElementById('collection-percent').innerText = percent + "%";
 
-            // 🎉 100% 컬렉션 완성 시 축하 알림 효과
             if (collectedCount === totalCount && totalCount > 0) {
                 setTimeout(() => {
                     alert('🎉 대박! 포켓몬 30주년 띠부씰 도감을 완전히 마스터하셨습니다! 축하합니다! 👏');
@@ -233,7 +296,6 @@
             }
         }
 
-        // 초기 실행 시 화면에 현황판 수치 반영
         updateStatusBoard();
 
         function getStatusString() {
