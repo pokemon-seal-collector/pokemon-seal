@@ -36,7 +36,7 @@
         header h1 { margin: 0 0 10px 0; font-size: 24px; color: #000; }
         header p { margin: 0 0 15px 0; font-weight: bold; color: #333; }
 
-        .btn-container { display: flex; gap: 10px; justify-content: center; }
+        .btn-container { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
         .btn {
             background-color: var(--pokemon-blue); color: white; border: none;
             padding: 10px 20px; font-size: 14px; font-weight: bold;
@@ -45,6 +45,8 @@
         .btn:hover { background-color: #2a3795; }
         .btn.save { background-color: #e3350d; }
         .btn.save:hover { background-color: #b32808; }
+        .btn.share { background-color: #28a745; }
+        .btn.share:hover { background-color: #1e7e34; }
 
         #capture-area {
             background-color: var(--pokemon-yellow);
@@ -124,6 +126,7 @@
             <button class="btn" onclick="allCollect()">전체 선택</button>
             <button class="btn" onclick="allClear()">전체 해제</button>
             <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
+            <button class="btn share" onclick="copyShareUrl()">현재 현황 링크 복사</button>
         </div>
     </header>
 
@@ -136,7 +139,6 @@
     </div>
 
     <script>
-        // 💡 요청하신 순서(롱스톤 -> 찌리리공, 붐볼 / 캥카 -> 별가사리, 아쿠스타)를 완벽히 조율한 100종 명단
         const pokemonList = [
             "이상해씨", "이상해풀", "이상해꽃", "파이리", "리자드", "리자몽", "꼬부기", "어니부기", "거북왕", "캐터피", "단데기", "버터플",
             "뿔충이", "딱충이", "독침붕", "구구", "피죤", "피죤투", "꼬렛", "레트라", "아보", "아보크", "피카츄", "라이츄",
@@ -150,10 +152,27 @@
         ];
 
         const gridContainer = document.getElementById('seal-grid');
+        
+        // URL 파라미터 또는 로컬 스토리지에서 데이터 읽어오기
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlData = urlParams.get('data');
+        let savedData = [];
+
+        if (urlData) {
+            savedData = urlData.split(',');
+        } else {
+            const localData = localStorage.getItem('pokemon_30th_seal');
+            if (localData) savedData = localData.split(',');
+        }
 
         pokemonList.forEach((name, index) => {
             const item = document.createElement('div');
             item.className = 'seal-item';
+            
+            // 초기 상태 세팅 (저장된 데이터가 있으면 반영)
+            if (savedData[index] === '1') {
+                item.classList.add('collected');
+            }
             
             const col = index % 12;
             const row = Math.floor(index / 12);
@@ -166,13 +185,50 @@
                 <div class="seal-name">${name}</div>
             `;
             
-            item.addEventListener('click', () => { item.classList.toggle('collected'); });
+            item.addEventListener('click', () => { 
+                item.classList.toggle('collected'); 
+                saveCurrentStatus(); // 클릭할 때마다 브라우저에 자동 저장
+            });
             gridContainer.appendChild(item);
         });
 
-        function allCollect() { document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); }
-        function allClear() { document.querySelectorAll('.seal-item').forEach(item => item.classList.remove('collected')); }
+        // 현재 수집 상태를 배열 문자열로 추출 (획득: 1, 미획득: 0)
+        function getStatusString() {
+            const items = document.querySelectorAll('.seal-item');
+            const status = [];
+            items.forEach(item => {
+                status.push(item.classList.contains('collected') ? '1' : '0');
+            });
+            return status.join(',');
+        }
+
+        // 브라우저 로컬 저장소에 저장하는 함수
+        function saveCurrentStatus() {
+            localStorage.setItem('pokemon_30th_seal', getStatusString());
+        }
+
+        function allCollect() { 
+            document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); 
+            saveCurrentStatus();
+        }
+        function allClear() { 
+            document.querySelectorAll('.seal-item').forEach(item => item.classList.remove('collected')); 
+            saveCurrentStatus();
+        }
         
+        // 현재 현황을 포함한 주소를 복사하는 함수
+        function copyShareUrl() {
+            const statusStr = getStatusString();
+            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('현재 수집 현황이 담긴 링크가 복사되었습니다! 카톡이나 메모장에 붙여넣어 활용하세요.');
+            }).catch(err => {
+                // 구형 브라우저 대응용 임시 주소창 노출
+                prompt('아래 링크를 전체 복사해서 공유하세요:', shareUrl);
+            });
+        }
+
         function saveAsImage() {
             const captureArea = document.getElementById('capture-area');
             html2canvas(captureArea, {
