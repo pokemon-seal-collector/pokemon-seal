@@ -61,7 +61,6 @@
             line-height: 1.5;
         }
 
-        /* 트레이너 정보 표시 영역 */
         .user-box {
             margin-bottom: 16px;
             background: rgba(255, 255, 255, 0.85);
@@ -105,7 +104,7 @@
             width: 100%;
             height: 100%;
             border: none;
-            background: transparent !transparent;
+            background: transparent !important;
             font-size: 16px;
             font-weight: bold;
             color: var(--pokemon-blue);
@@ -120,11 +119,7 @@
             box-sizing: border-box;
             z-index: 5;
         }
-        .user-box input:focus {
-            border-bottom-style: solid;
-        }
         
-        /* 💡 잠금 상태일 때 인풋 스타일 조절 (밑줄 없앰) */
         .user-box input:disabled {
             border-bottom: none;
             color: #444;
@@ -158,6 +153,7 @@
             z-index: 5 !important;
         }
 
+        /* 💡 상태판 '보유 총 수량' 삭제 및 3칸 균형 리디자인 */
         .status-board {
             background-color: white;
             border: 2px solid var(--pokemon-blue);
@@ -203,7 +199,6 @@
             margin: 0 auto;
         }
         
-        /* 💡 수정 활성화/잠금 토글 버튼 전용 스타일 */
         .btn-toggle {
             grid-column: span 2;
             background-color: #fff;
@@ -217,6 +212,11 @@
             background-color: #fffbdf;
             border-color: var(--pokemon-red);
             color: var(--pokemon-red);
+        }
+
+        .btn-clear-all {
+            grid-column: span 2;
+            background-color: #777 !important;
         }
 
         .btn {
@@ -237,11 +237,39 @@
         .btn:active { transform: scale(0.98); }
         .btn.save { background-color: var(--pokemon-red); }
         .btn.share { background-color: var(--pokemon-green); }
-        /* 편집 비활성화 시 일반 기능 버튼 시각적 피드백 */
         .btn:disabled {
             background-color: #bbb !important;
             cursor: not-allowed;
             opacity: 0.7;
+        }
+
+        /* 💡 필터 컨트롤 탭 메뉴 스타일 */
+        .filter-container {
+            display: flex;
+            width: 100%;
+            background: #e8e8e8;
+            padding: 4px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            box-sizing: border-box;
+        }
+        .filter-tab {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 8px 5px;
+            font-size: 13px;
+            font-weight: bold;
+            color: #555;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.15s ease;
+            text-align: center;
+        }
+        .filter-tab.active {
+            background: white;
+            color: var(--pokemon-blue);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         #capture-area {
@@ -253,7 +281,6 @@
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        /* 기본 PC 화면: 12열 격자 */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -263,13 +290,7 @@
             border-radius: 8px;
             position: relative;
         }
-        
-        /* 💡 잠금(화면 홀드) 상태일 때 그리드 전체 터치 차단 막 생성 */
-        .grid-container.locked .seal-item {
-            cursor: default;
-        }
 
-        /* 태블릿 및 모바일 화면 대응 */
         @media (max-width: 1024px) { .grid-container { grid-template-columns: repeat(8, 1fr); } }
         @media (max-width: 768px) { .grid-container { grid-template-columns: repeat(6, 1fr); } }
         @media (max-width: 480px) { 
@@ -281,7 +302,6 @@
             header p { font-size: 12px; }
         }
 
-        /* 이미지 캡처 강제 적용용 클래스 (PC뷰 고정) */
         .forced-pc-layout .grid-container {
             grid-template-columns: repeat(12, 1fr) !important;
             gap: 6px !important;
@@ -304,6 +324,11 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
             cursor: pointer;
             user-select: none;
+        }
+
+        /* 💡 필터 조건에 맞지 않는 카드를 부드럽게 숨김 처리 */
+        .seal-item.hide-by-filter {
+            display: none !important;
         }
 
         .seal-image-box {
@@ -333,13 +358,32 @@
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.62); backdrop-filter: blur(1.2px);
             opacity: 1; transition: opacity 0.15s ease; pointer-events: none;
+            z-index: 1;
         }
 
         .seal-item.collected::after { opacity: 0; }
+
+        .seal-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background-color: var(--pokemon-red);
+            color: white;
+            font-size: 10px;
+            font-weight: 850;
+            padding: 2px 5px;
+            border-radius: 10px;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            display: none; 
+        }
+        
+        .seal-item.duplicate .seal-badge {
+            display: block;
+        }
         
         .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666; font-weight: 500; }
 
-        /* 아이폰(iOS) 호환성을 위한 이미지 팝업창(모달) 스타일 */
         .image-modal {
             display: none;
             position: fixed;
@@ -396,7 +440,7 @@
 
     <div id="page-wrapper">
         <header>
-            <h1>포켓몬 30주년 기념<br>오리지널 아트웍 띠부씰 (100종)</h1>
+            <h1>포켓몬 30주년 아트웍 스페셜 띠부씰 도감</h1>
             
             <div class="user-box" id="user-box-container">
                 <span class="label-text">트레이너 :</span>
@@ -407,27 +451,31 @@
             </div>
 
             <p>
-                <span data-html2canvas-ignore="true">씰을 클릭하여 보유 상태를 표시하세요!<br></span>
+                <span data-html2canvas-ignore="true">편집 모드를 켜고 씰을 클릭해 수량을 늘려보세요!<br>(줄이려면 길게 누르거나 우클릭)<br></span>
                 <span>[ 어두운 곳 = 미획득 / 밝은 곳 = 획득 ]</span>
             </p>
             
             <div class="status-board">
-                <div class="status-item">보유 갯수<span id="count-collected">0</span></div>
-                <div class="status-item">남은 갯수<span id="count-remaining">100</span></div>
-                <div class="status-item percent">수집률<span id="collection-percent">0</span></div>
+                <div class="status-item">수집 종류<span id="count-collected">0종</span></div>
+                <div class="status-item">남은 종류<span id="count-remaining">100종</span></div>
+                <div class="status-item percent">수집률<span id="collection-percent">0%</span></div>
             </div>
 
             <div class="btn-container" data-html2canvas-ignore="true">
                 <button class="btn btn-toggle" id="edit-toggle-btn" onclick="toggleEditMode()">🔒 현재 상태: 잠금 (클릭/수정 불가)</button>
-                
-                <button class="btn" id="btn-all-collect" onclick="allCollect()" disabled>전체 선택</button>
-                <button class="btn" id="btn-all-clear" onclick="allClear()" disabled>전체 해제</button>
                 <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
                 <button class="btn share" onclick="copyShareUrl()">현황 링크 복사</button>
+                <button class="btn btn-clear-all" id="btn-all-clear" onclick="allClear()" disabled>전체 데이터 초기화</button>
             </div>
         </header>
 
         <div id="capture-area">
+            <div class="filter-container" id="filter-tab-container">
+                <button class="filter-tab active" onclick="applyFilter('all')">전체 목록</button>
+                <button class="filter-tab" onclick="applyFilter('duplicate')">중복 씰 리스트 🔁</button>
+                <button class="filter-tab" onclick="applyFilter('missing')">미획득 리스트 🔍</button>
+            </div>
+
             <div class="grid-container locked" id="seal-grid"></div>
             <div class="footer-notice">출처 : 포사모 도감 이미지 활용</div>
         </div>
@@ -460,13 +508,13 @@
         const userBoxContainer = document.getElementById('user-box-container');
         const pageWrapper = document.getElementById('page-wrapper');
         
-        // 홀드 모드 여부 변수 (true = 잠금 상태 / false = 수정 모드)
         let isLocked = true;
+        let sealCounts = new Array(pokemonList.length).fill(0);
+        let currentFilterMode = 'all'; // 현재 보고 있는 필터 상태 관리용 변수
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlData = urlParams.get('data');
         const urlUser = urlParams.get('user');
-        let savedData = [];
 
         if (urlUser) {
             userIdInput.value = decodeURIComponent(urlUser);
@@ -481,79 +529,163 @@
         }
 
         if (urlData) {
-            savedData = urlData.split(',');
+            const parsed = urlData.split(',');
+            sealCounts = parsed.map(v => parseInt(v, 10) || 0);
         } else {
-            const localData = localStorage.getItem('pokemon_30th_seal');
-            if (localData) savedData = localData.split(',');
+            const localData = localStorage.getItem('pokemon_30th_seal_counts');
+            if (localData) {
+                sealCounts = localData.split(',').map(v => parseInt(v, 10) || 0);
+            } else {
+                const oldData = localStorage.getItem('pokemon_30th_seal');
+                if (oldData) {
+                    sealCounts = oldData.split(',').map(v => v === '1' ? 1 : 0);
+                }
+            }
         }
 
         pokemonList.forEach((name, index) => {
             const item = document.createElement('div');
             item.className = 'seal-item';
             
-            if (savedData[index] === '1') {
-                item.classList.add('collected');
-            }
-            
             const col = index % 12;
             const row = Math.floor(index / 12);
-            
             const posX = col * (100 / 11);
             const posY = row * (100 / 8); 
 
             item.innerHTML = `
+                <div class="seal-badge" id="badge-${index}">+0</div>
                 <div class="seal-image-box" style="background-position: ${posX}% ${posY}%;"></div>
                 <div class="seal-name">${name}</div>
             `;
             
-            // 💡 클릭 이벤트 발생 시 잠금 여부를 먼저 체크하도록 설계 조절
             item.addEventListener('click', () => { 
-                if (isLocked) return; // 🔒 잠겨있으면 작동 금지!
-                item.classList.toggle('collected'); 
-                saveCurrentStatus();
-                updateStatusBoard();
+                if (isLocked) return;
+                changeSealCount(index, 1);
             });
+
+            item.oncontextmenu = function(e) {
+                if (isLocked) return true;
+                e.preventDefault();
+                changeSealCount(index, -1);
+                return false;
+            };
+
+            let touchTimer;
+            item.addEventListener('touchstart', function(e) {
+                if (isLocked) return;
+                touchTimer = setTimeout(() => {
+                    changeSealCount(index, -1);
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }, 600); 
+            }, {passive: true});
+
+            item.addEventListener('touchend', function() {
+                clearTimeout(touchTimer);
+            }, {passive: true});
+
             gridContainer.appendChild(item);
+            renderSealState(item, index);
         });
 
-        // 💡 홀드-수정 모드 스위칭 스크립트 함수
+        function renderSealState(element, index) {
+            const count = sealCounts[index];
+            const badge = element.querySelector('.seal-badge');
+            
+            if (count > 0) {
+                element.classList.add('collected');
+                if (count >= 2) {
+                    element.classList.add('duplicate');
+                    badge.innerText = `+${count - 1}`; 
+                } else {
+                    element.classList.remove('duplicate');
+                }
+            } else {
+                element.classList.remove('collected');
+                element.classList.remove('duplicate');
+            }
+
+            // 실시간 수량 조작 시 현재 켜져 있는 필터 규칙을 재확인하여 화면 갱신
+            refreshIndividualFilter(element, index);
+        }
+
+        function changeSealCount(index, amount) {
+            let current = sealCounts[index];
+            current += amount;
+            if (current < 0) current = 0;
+            if (current > 99) current = 99; 
+            
+            sealCounts[index] = current;
+            
+            const items = document.querySelectorAll('.seal-item');
+            renderSealState(items[index], index);
+            
+            saveCurrentStatus();
+            updateStatusBoard();
+        }
+
+        // 💡 필터 모드 변경 및 토글 디자인 가동용 핵심 함수
+        function applyFilter(mode) {
+            currentFilterMode = mode;
+            
+            // 탭 디자인 스위칭
+            const tabs = document.querySelectorAll('.filter-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            if(mode === 'all') tabs[0].classList.add('active');
+            if(mode === 'duplicate') tabs[1].classList.add('active');
+            if(mode === 'missing') tabs[2].classList.add('active');
+
+            // 리스트 전체 일괄 가시성 동기화
+            const items = document.querySelectorAll('.seal-item');
+            items.forEach((item, index) => {
+                refreshIndividualFilter(item, index);
+            });
+        }
+
+        // 개별 카드 필터 조건 검사 규칙식
+        function refreshIndividualFilter(element, index) {
+            const count = sealCounts[index];
+            element.classList.remove('hide-by-filter');
+
+            if (currentFilterMode === 'duplicate' && count < 2) {
+                element.classList.add('hide-by-filter'); // 중복만 보기 탭일 때 수량이 2 미만이면 숨김
+            } else if (currentFilterMode === 'missing' && count > 0) {
+                element.classList.add('hide-by-filter'); // 미획득만 보기 탭일 때 가지고 있으면 숨김
+            }
+        }
+
         function toggleEditMode() {
             const toggleBtn = document.getElementById('edit-toggle-btn');
-            const btnCollect = document.getElementById('btn-all-collect');
             const btnClear = document.getElementById('btn-all-clear');
 
             isLocked = !isLocked;
 
             if (isLocked) {
-                // 🔒 잠금 활성화 모드
                 gridContainer.classList.add('locked');
-                userIdInput.disabled = true; // 이름 수정 차단
+                userIdInput.disabled = true;
                 toggleBtn.classList.remove('active');
                 toggleBtn.innerText = "🔒 현재 상태: 잠금 (클릭/수정 불가)";
-                btnCollect.disabled = true;
                 btnClear.disabled = true;
             } else {
-                // ✏️ 수정 활성화 모드
                 gridContainer.classList.remove('locked');
-                userIdInput.disabled = false; // 이름 수정 허용
+                userIdInput.disabled = false;
                 toggleBtn.classList.add('active');
                 toggleBtn.innerText = "✏️ 현재 상태: 편집 중 (클릭/수정 가능)";
-                btnCollect.disabled = false;
                 btnClear.disabled = false;
             }
         }
 
         function updateStatusBoard() {
-            const totalCount = pokemonList.length;
-            const collectedCount = document.querySelectorAll('.seal-item.collected').length;
-            const remainingCount = totalCount - collectedCount;
-            const percent = Math.round((collectedCount / totalCount) * 100);
+            const totalTypes = pokemonList.length;
+            const collectedTypes = sealCounts.filter(c => c > 0).length;
+            const remainingTypes = totalTypes - collectedTypes;
+            const percent = Math.round((collectedTypes / totalTypes) * 100);
 
-            document.getElementById('count-collected').innerText = collectedCount + "장";
-            document.getElementById('count-remaining').innerText = remainingCount + "장";
+            document.getElementById('count-collected').innerText = collectedTypes + "종";
+            document.getElementById('count-remaining').innerText = remainingTypes + "종";
             document.getElementById('collection-percent').innerText = percent + "%";
 
-            if (collectedCount === totalCount && totalCount > 0) {
+            if (collectedTypes === totalTypes && totalTypes > 0) {
                 setTimeout(() => {
                     alert('🎉 대박! 포켓몬 30주년 띠부씰 도감을 완전히 마스터하셨습니다! 축하합니다! 👏');
                 }, 300);
@@ -563,34 +695,27 @@
         updateStatusBoard();
 
         function getStatusString() {
-            const items = document.querySelectorAll('.seal-item');
-            const status = [];
-            items.forEach(item => {
-                status.push(item.classList.contains('collected') ? '1' : '0');
-            });
-            return status.join(',');
+            return sealCounts.join(',');
         }
 
         function saveCurrentStatus() {
-            localStorage.setItem('pokemon_30th_seal', getStatusString());
+            localStorage.setItem('pokemon_30th_seal_counts', getStatusString());
         }
 
         function saveUserId() {
             localStorage.setItem('pokemon_30th_user', userIdInput.value);
             captureTextView.innerText = userIdInput.value;
         }
-
-        function allCollect() { 
-            if (isLocked) return;
-            document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); 
-            saveCurrentStatus();
-            updateStatusBoard();
-        }
+        
         function allClear() { 
             if (isLocked) return;
-            document.querySelectorAll('.seal-item').forEach(item => item.classList.remove('collected')); 
+            if (!confirm('정말 수집 데이터를 모두 초기화하시겠습니까?')) return;
+            sealCounts = new Array(pokemonList.length).fill(0);
+            const items = document.querySelectorAll('.seal-item');
+            items.forEach((item, index) => renderSealState(item, index));
             saveCurrentStatus();
             updateStatusBoard();
+            applyFilter('all'); // 초기화 시 기본전체 필터로 안전 복귀
         }
         
         function copyShareUrl() {
@@ -599,7 +724,7 @@
             const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}&user=${userStr}`;
             
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('현재 수집 현황과 아이디가 담긴 링크가 복사되었습니다! 카톡이나 메모장에 붙여넣어 활용하세요.');
+                alert('현재 중복 수량까지 포함된 수집 현황 링크가 복사되었습니다!');
             }).catch(err => {
                 prompt('아래 링크를 전체 복사해서 공유하세요:', shareUrl);
             });
@@ -622,6 +747,11 @@
                 const imgData = canvas.toDataURL('image/png');
                 const username = userIdInput.value.trim() || '포켓몬';
                 
+                // 파일 저장 시 어떤 필터 상태였는지 파일명에 조합하여 구분하기 쉽도록 명명
+                let filterLabel = "전체현황";
+                if(currentFilterMode === 'duplicate') filterLabel = "중복목록";
+                if(currentFilterMode === 'missing') filterLabel = "위시리스트";
+
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
                 if (isIOS) {
@@ -629,7 +759,7 @@
                     document.getElementById('save-modal').style.display = 'flex';
                 } else {
                     const link = document.createElement('a');
-                    link.download = `포켓몬_30주년_띠부씰_도감_${username}.png`;
+                    link.download = `포켓몬_30주년_도감_${filterLabel}_${username}.png`;
                     link.href = imgData;
                     link.click();
                 }
