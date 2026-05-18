@@ -24,6 +24,16 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* 캡처를 위한 전체 감싸기 컨테이너 */
+        #page-wrapper {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
         header {
             text-align: center;
             background-color: var(--pokemon-yellow);
@@ -31,7 +41,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 1200px;
             margin-bottom: 20px;
             box-sizing: border-box;
         }
@@ -50,6 +59,35 @@
             color: #444; 
             word-break: keep-all;
             line-height: 1.4;
+        }
+
+        /* 유저 아이디 표시 스타일 */
+        .user-box {
+            margin-bottom: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: #222;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 6px 12px;
+            border-radius: 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .user-box input {
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--pokemon-blue);
+            border-bottom: 2px dashed var(--pokemon-blue);
+            padding: 2px 4px;
+            text-align: center;
+            width: 120px;
+        }
+        .user-box input:focus {
+            outline: none;
+            border-bottom-style: solid;
         }
 
         .status-board {
@@ -120,12 +158,11 @@
             padding: 15px;
             border-radius: 12px;
             width: 100%;
-            max-width: 1200px;
             box-sizing: border-box;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
 
-        /* 💡 기본 PC 화면에서는 12열 격자 유지 */
+        /* 기본 PC 화면: 12열 격자 */
         .grid-container {
             display: grid;
             grid-template-columns: repeat(12, 1fr);
@@ -135,17 +172,22 @@
             border-radius: 8px;
         }
 
-        /* 💡 태블릿 및 모바일 화면 대응 구간 세분화 */
+        /* 태블릿 및 모바일 화면 대응 (웹 브라우저 뷰 전용) */
         @media (max-width: 1024px) { .grid-container { grid-template-columns: repeat(8, 1fr); } }
         @media (max-width: 768px) { .grid-container { grid-template-columns: repeat(6, 1fr); } }
-        
-        /* 💡 모바일 화면(480px 이하)에서 무조건 시원하게 한 줄에 3개씩 뜨도록 고정! */
         @media (max-width: 480px) { 
             .grid-container { 
                 grid-template-columns: repeat(3, 1fr); 
                 gap: 6px; 
                 padding: 8px; 
             } 
+        }
+
+        /* 이미지 캡처 강제 적용용 클래스 (캡처 시점에만 임시 부여) */
+        .forced-pc-layout .grid-container {
+            grid-template-columns: repeat(12, 1fr) !important;
+            gap: 6px !important;
+            padding: 12px !important;
         }
 
         .seal-item {
@@ -185,7 +227,6 @@
             line-height: 14px;
         }
 
-        /* 💡 3개 배치에 맞추어 모바일에서 글자가 흐리거나 작게 깨지지 않게 폰트 크기 최적화 */
         @media (max-width: 480px) {
             .seal-name { font-size: 11px; margin-top: 3px; }
         }
@@ -203,27 +244,36 @@
 </head>
 <body>
 
-    <header>
-        <h1>포켓몬 30주년 기념<br>오리지널 아트웍 띠부씰 (100종)</h1>
-        <p>씰을 클릭하여 보유 상태를 표시하세요!<br>[어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
-        
-        <div class="status-board">
-            <div class="status-item">보유 갯수<span id="count-collected">0</span></div>
-            <div class="status-item">남은 갯수<span id="count-remaining">100</span></div>
-            <div class="status-item percent">수집률<span id="collection-percent">0</span></div>
-        </div>
+    <div id="page-wrapper">
+        <header>
+            <h1>포켓몬 30주년 기념<br>오리지널 아트웍 띠부씰 (100종)</h1>
+            
+            <!-- '훈련사'에서 '트레이너'로 문구 변경 -->
+            <div class="user-box">
+                <span id="user-label">트레이너 :</span>
+                <input type="text" id="user-id" value="지우" maxlength="10" oninput="saveUserId()" placeholder="아이디 입력">
+            </div>
 
-        <div class="btn-container">
-            <button class="btn" onclick="allCollect()">전체 선택</button>
-            <button class="btn" onclick="allClear()">전체 해제</button>
-            <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
-            <button class="btn share" onclick="copyShareUrl()">현황 링크 복사</button>
-        </div>
-    </header>
+            <p>씰을 클릭하여 보유 상태를 표시하세요!<br>[어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
+            
+            <div class="status-board">
+                <div class="status-item">보유 갯수<span id="count-collected">0</span></div>
+                <div class="status-item">남은 갯수<span id="count-remaining">100</span></div>
+                <div class="status-item percent">수집률<span id="collection-percent">0</span></div>
+            </div>
 
-    <div id="capture-area">
-        <div class="grid-container" id="seal-grid"></div>
-        <div class="footer-notice">출처 : 포사모 도감 이미지 활용</div>
+            <div class="btn-container" data-html2canvas-ignore="true">
+                <button class="btn" onclick="allCollect()">전체 선택</button>
+                <button class="btn" onclick="allClear()">전체 해제</button>
+                <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
+                <button class="btn share" onclick="copyShareUrl()">현황 링크 복사</button>
+            </div>
+        </header>
+
+        <div id="capture-area">
+            <div class="grid-container" id="seal-grid"></div>
+            <div class="footer-notice">출처 : 포사모 도감 이미지 활용</div>
+        </div>
     </div>
 
     <script>
@@ -240,10 +290,20 @@
         ];
 
         const gridContainer = document.getElementById('seal-grid');
+        const userIdInput = document.getElementById('user-id');
         
         const urlParams = new URLSearchParams(window.location.search);
         const urlData = urlParams.get('data');
+        const urlUser = urlParams.get('user');
         let savedData = [];
+
+        if (urlUser) {
+            userIdInput.value = decodeURIComponent(urlUser);
+            localStorage.setItem('pokemon_30th_user', userIdInput.value);
+        } else {
+            const localUser = localStorage.getItem('pokemon_30th_user');
+            if (localUser) userIdInput.value = localUser;
+        }
 
         if (urlData) {
             savedData = urlData.split(',');
@@ -311,6 +371,10 @@
             localStorage.setItem('pokemon_30th_seal', getStatusString());
         }
 
+        function saveUserId() {
+            localStorage.setItem('pokemon_30th_user', userIdInput.value);
+        }
+
         function allCollect() { 
             document.querySelectorAll('.seal-item').forEach(item => item.classList.add('collected')); 
             saveCurrentStatus();
@@ -324,26 +388,41 @@
         
         function copyShareUrl() {
             const statusStr = getStatusString();
-            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}`;
+            const userStr = encodeURIComponent(userIdInput.value);
+            const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}&user=${userStr}`;
             
             navigator.clipboard.writeText(shareUrl).then(() => {
-                alert('현재 수집 현황이 담긴 링크가 복사되었습니다! 카톡이나 메모장에 붙여넣어 활용하세요.');
+                alert('현재 수집 현황과 아이디가 담긴 링크가 복사되었습니다! 카톡이나 메모장에 붙여넣어 활용하세요.');
             }).catch(err => {
                 prompt('아래 링크를 전체 복사해서 공유하세요:', shareUrl);
             });
         }
 
         function saveAsImage() {
-            const captureArea = document.getElementById('capture-area');
-            html2canvas(captureArea, {
+            const pageWrapper = document.getElementById('page-wrapper');
+            
+            pageWrapper.classList.add('forced-pc-layout');
+            const originalWidth = pageWrapper.style.width;
+            pageWrapper.style.width = '1200px';
+
+            html2canvas(pageWrapper, {
                 useCORS: true,
                 scale: 2, 
-                backgroundColor: '#FFDE00'
+                backgroundColor: '#f5f5f5', 
+                windowWidth: 1200 
             }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = '포켓몬_30주년_띠부씰_도감_현황.png';
+                const username = userIdInput.value.trim() || '포켓몬';
+                link.download = `포켓몬_30주년_띠부씰_도감_${username}.png`;
                 link.href = canvas.toDataURL('image/png');
                 link.click();
+                
+                pageWrapper.classList.remove('forced-pc-layout');
+                pageWrapper.style.width = originalWidth;
+            }).catch(err => {
+                console.error("캡처 중 오류 발생:", err);
+                pageWrapper.classList.remove('forced-pc-layout');
+                pageWrapper.style.width = originalWidth;
             });
         }
     </script>
