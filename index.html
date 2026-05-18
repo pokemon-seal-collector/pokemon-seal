@@ -45,24 +45,26 @@
         }
 
         header h1 { 
-            margin: 0 0 8px 0; 
+            margin: 0 0 12px 0; 
             font-size: 22px; 
             color: #111; 
             word-break: keep-all;
             line-height: 1.3;
         }
+        
+        /* 💡 안내 텍스트 영역 모바일 가독성 최적화 */
         header p { 
             margin: 0 0 18px 0; 
             font-size: 13px; 
             font-weight: 500; 
             color: #444; 
-            word-break: keep-all;
-            line-height: 1.4;
+            word-break: keep-all; /* 단어 단위 줄바꿈 고정 */
+            line-height: 1.5;
         }
 
         /* 트레이너 정보 표시 영역 */
         .user-box {
-            margin-bottom: 18px;
+            margin-bottom: 16px;
             background: rgba(255, 255, 255, 0.85);
             padding: 0 16px;
             border-radius: 20px;
@@ -76,10 +78,9 @@
             font-weight: bold;
             color: #222;
             position: relative;
-            z-index: 1; /* 배경 레이어 기준점 고정 */
+            z-index: 1;
         }
 
-        /* 💡 트레이너 글자가 흰색 배경 뒤로 안 숨도록 캡처 레이어 최상단 보정 */
         .user-box .label-text {
             position: relative;
             z-index: 3 !important; 
@@ -88,10 +89,9 @@
             flex-shrink: 0;
         }
         
-        /* 입력창과 캡처용 텍스트가 들어갈 래퍼 공간 */
         .input-container {
             position: relative;
-            z-index: 3 !important; /* 배경 위로 강제 노출 */
+            z-index: 3 !important; 
             width: 130px;
             height: 24px;
             display: flex;
@@ -99,7 +99,6 @@
             justify-content: center;
         }
 
-        /* 웹 화면에서 직접 타이핑하는 실제 Input */
         .user-box input {
             position: absolute;
             top: 0;
@@ -120,13 +119,12 @@
             outline: none;
             -webkit-appearance: none;
             box-sizing: border-box;
-            z-index: 5; /* 평소 타이핑을 위해 가장 위 배치 */
+            z-index: 5;
         }
         .user-box input:focus {
             border-bottom-style: solid;
         }
 
-        /* 캡처를 위해 대기하는 순수 텍스트 영역 */
         .user-box .capture-text-only {
             position: absolute;
             top: 0;
@@ -146,7 +144,6 @@
             z-index: 4;
         }
 
-        /* 이미지 저장(캡처) 버튼 클릭 시 활성화되는 임시 스위칭 스타일 */
         .user-box.is-capturing input {
             opacity: 0 !important;
             z-index: 4 !important;
@@ -247,6 +244,10 @@
                 gap: 6px; 
                 padding: 8px; 
             } 
+            /* 모바일 화면 폭을 고려하여 폰트 크기 및 줄바꿈 미세 최적화 */
+            header p {
+                font-size: 12px;
+            }
         }
 
         /* 이미지 캡처 강제 적용용 클래스 (PC뷰 고정) */
@@ -322,7 +323,7 @@
                 </div>
             </div>
 
-            <p>씰을 클릭하여 보유 상태를 표시하세요!<br>[어두운 곳 = 미획득 / 밝은 곳 = 획득]</p>
+            <p>씰을 클릭하여 보유 상태를 표시하세요!<br>[ 어두운 곳 = 미획득 / 밝은 곳 = 획득 ]</p>
             
             <div class="status-board">
                 <div class="status-item">보유 갯수<span id="count-collected">0</span></div>
@@ -475,7 +476,6 @@
         }
 
         function saveAsImage() {
-            // 캡처 레이어 스위칭 가동
             userBoxContainer.classList.add('is-capturing');
             pageWrapper.classList.add('forced-pc-layout');
             
@@ -495,7 +495,6 @@
                 link.href = canvas.toDataURL('image/png');
                 link.click();
                 
-                // 원상복구
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
