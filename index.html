@@ -153,7 +153,6 @@
             z-index: 5 !important;
         }
 
-        /* 💡 상태판 '보유 총 수량' 삭제 및 3칸 균형 리디자인 */
         .status-board {
             background-color: white;
             border: 2px solid var(--pokemon-blue);
@@ -172,7 +171,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 700;
             color: #555;
             border-right: 1px solid #eee;
@@ -180,16 +179,15 @@
         .status-item:last-child { border-right: none; }
         
         .status-item span { 
-            font-size: 18px; 
+            font-size: 16px; 
             margin-top: 4px;
             color: var(--pokemon-blue); 
         }
         .status-item.percent span { 
             color: var(--pokemon-red); 
-            font-size: 20px; 
+            font-size: 18px; 
         }
 
-        /* 조작 버튼 컨테이너 */
         .btn-container { 
             display: grid;
             grid-template-columns: repeat(2, 1fr);
@@ -243,7 +241,30 @@
             opacity: 0.7;
         }
 
-        /* 💡 필터 컨트롤 탭 메뉴 스타일 */
+        /* 광고 영역 전용 레이아웃 스타일 */
+        .ads-banner-zone {
+            margin-top: 25px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+        .ads-banner-zone .ad-label {
+            font-size: 10px;
+            color: #888;
+            margin-bottom: 6px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .ads-banner-zone > div {
+            max-width: 100% !important;
+            width: 100%;
+            text-align: center;
+        }
+
         .filter-container {
             display: flex;
             width: 100%;
@@ -326,7 +347,6 @@
             user-select: none;
         }
 
-        /* 💡 필터 조건에 맞지 않는 카드를 부드럽게 숨김 처리 */
         .seal-item.hide-by-filter {
             display: none !important;
         }
@@ -477,7 +497,27 @@
             </div>
 
             <div class="grid-container locked" id="seal-grid"></div>
-            <div class="footer-notice">출처 : 포사모 도감 이미지 활용</div>
+            
+            <div class="ads-banner-zone" data-html2canvas-ignore="true">
+                
+                <div style="margin-bottom: 20px;">
+                </div>
+
+                <div class="ad-label" style="border-top: 1px dashed #ccc; padding-top: 15px; width: 100%;">
+                    파트너스 활동을 통해 일정액의 수수료를 제공받을 수 있음
+                </div>
+                
+                <script src="https://ads-partners.coupang.com/g.js"></script>
+                <script>
+                    new PartnersCoupang.G({"id":990071,"template":"carousel","trackingCode":"AF3620651","width":"680","height":"140","tsource":""});
+                </script>
+                <div style="margin-top: 8px;"></div>
+                <script>
+                    new PartnersCoupang.G({"id":990073,"template":"carousel","trackingCode":"AF3620651","width":"680","height":"140","tsource":""});
+                </script>
+            </div>
+
+            <div class="footer-notice" style="margin-top: 25px;">출처 : 포사모 도감 이미지 활용</div>
         </div>
     </div>
 
@@ -510,7 +550,7 @@
         
         let isLocked = true;
         let sealCounts = new Array(pokemonList.length).fill(0);
-        let currentFilterMode = 'all'; // 현재 보고 있는 필터 상태 관리용 변수
+        let currentFilterMode = 'all';
 
         const urlParams = new URLSearchParams(window.location.search);
         const urlData = urlParams.get('data');
@@ -604,7 +644,6 @@
                 element.classList.remove('duplicate');
             }
 
-            // 실시간 수량 조작 시 현재 켜져 있는 필터 규칙을 재확인하여 화면 갱신
             refreshIndividualFilter(element, index);
         }
 
@@ -623,11 +662,9 @@
             updateStatusBoard();
         }
 
-        // 💡 필터 모드 변경 및 토글 디자인 가동용 핵심 함수
         function applyFilter(mode) {
             currentFilterMode = mode;
             
-            // 탭 디자인 스위칭
             const tabs = document.querySelectorAll('.filter-tab');
             tabs.forEach(tab => tab.classList.remove('active'));
             
@@ -635,22 +672,20 @@
             if(mode === 'duplicate') tabs[1].classList.add('active');
             if(mode === 'missing') tabs[2].classList.add('active');
 
-            // 리스트 전체 일괄 가시성 동기화
             const items = document.querySelectorAll('.seal-item');
             items.forEach((item, index) => {
                 refreshIndividualFilter(item, index);
             });
         }
 
-        // 개별 카드 필터 조건 검사 규칙식
         function refreshIndividualFilter(element, index) {
             const count = sealCounts[index];
             element.classList.remove('hide-by-filter');
 
             if (currentFilterMode === 'duplicate' && count < 2) {
-                element.classList.add('hide-by-filter'); // 중복만 보기 탭일 때 수량이 2 미만이면 숨김
+                element.classList.add('hide-by-filter'); 
             } else if (currentFilterMode === 'missing' && count > 0) {
-                element.classList.add('hide-by-filter'); // 미획득만 보기 탭일 때 가지고 있으면 숨김
+                element.classList.add('hide-by-filter'); 
             }
         }
 
@@ -715,7 +750,7 @@
             items.forEach((item, index) => renderSealState(item, index));
             saveCurrentStatus();
             updateStatusBoard();
-            applyFilter('all'); // 초기화 시 기본전체 필터로 안전 복귀
+            applyFilter('all'); 
         }
         
         function copyShareUrl() {
@@ -747,7 +782,6 @@
                 const imgData = canvas.toDataURL('image/png');
                 const username = userIdInput.value.trim() || '포켓몬';
                 
-                // 파일 저장 시 어떤 필터 상태였는지 파일명에 조합하여 구분하기 쉽도록 명명
                 let filterLabel = "전체현황";
                 if(currentFilterMode === 'duplicate') filterLabel = "중복목록";
                 if(currentFilterMode === 'missing') filterLabel = "위시리스트";
@@ -774,6 +808,10 @@
                 pageWrapper.style.width = originalWidth;
             });
         }
+
+        document.addEventListener('contextmenu', event => {
+            if (!isLocked) event.preventDefault();
+        });
 
         function closeModal() {
             document.getElementById('save-modal').style.display = 'none';
