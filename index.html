@@ -276,7 +276,6 @@
             box-sizing: border-box;
             overflow: hidden;
         }
-        /* html2canvas 캡처 시 광고를 안전하게 가리기 위한 클래스 */
         .ads-banner-zone.hide-for-capture {
             display: none !important;
         }
@@ -351,7 +350,6 @@
             header p { font-size: 12px; }
         }
 
-        /* 강제 PC 레이아웃(캡처용) 적용 시 미디어 쿼리 간섭 완전 차단 */
         .forced-pc-layout .grid-container {
             grid-template-columns: repeat(12, 1fr) !important;
             gap: 6px !important;
@@ -624,7 +622,6 @@
             }
         }
 
-        // 성능 최적화: DocumentFragment를 사용하여 리플로우(Reflow)를 1회로 단축
         const fragment = document.createDocumentFragment();
 
         pokemonList.forEach((name, index) => {
@@ -642,9 +639,43 @@
                 <div class="seal-name">${name}</div>
             `;
             
-            // 모바일과 PC 환경의 클릭/터치 이벤트를 꼬이지 않게 일원화
-            item.addEventListener('click', (e) => { 
+            let touchTimer = null;
+            let isLongTouch = false;
+            let blockMouseClick = false; // 🌟 고스트 클릭 원천 제어 플래그 변수
+
+            // 1. [하이브리드 지원 터치 이벤트] - 모바일, 패드 및 터치 PC 공통
+            item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
+                isLongTouch = false;
+                blockMouseClick = true; // 터치가 감지되면 이후 들어오는 가짜 마우스 클릭 완전 차단
+                
+                touchTimer = setTimeout(() => {
+                    isLongTouch = true;
+                    changeSealCount(index, -1);
+                    if(navigator.vibrate) navigator.vibrate(50);
+                }, 600); 
+            }, {passive: true});
+
+            item.addEventListener('touchend', function(e) { 
+                if (isLocked) return;
+                if (touchTimer) clearTimeout(touchTimer); 
+                
+                // iOS 환경 고스트 클릭 디버깅 방지용 하드 가드
+                if (!isLongTouch) {
+                    changeSealCount(index, 1);
+                }
+                
+                // 터치 동작 종료 직후 마우스 클릭 이벤트가 이중 전파되는 버그 디바운싱 차단
+                setTimeout(() => { blockMouseClick = false; }, 400);
+            }, {passive: true});
+            
+            item.addEventListener('touchmove', function() { 
+                if (touchTimer) clearTimeout(touchTimer); 
+            }, {passive: true});
+
+            // 2. [마우스 이벤트] - 데스크톱 및 일반 마우스 클릭 대응
+            item.addEventListener('click', (e) => { 
+                if (isLocked || blockMouseClick) return;
                 changeSealCount(index, 1);
             });
 
@@ -654,33 +685,6 @@
                 changeSealCount(index, -1);
                 return false;
             };
-
-            let touchTimer = null;
-            let isLongTouch = false;
-
-            item.addEventListener('touchstart', function(e) {
-                if (isLocked) return;
-                isLongTouch = false;
-                touchTimer = setTimeout(() => {
-                    isLongTouch = true;
-                    changeSealCount(index, -1);
-                    if(navigator.vibrate) navigator.vibrate(50);
-                }, 600); 
-            }, {passive: true});
-
-            item.addEventListener('touchend', function(e) { 
-                if (touchTimer) {
-                    clearTimeout(touchTimer); 
-                }
-                if (isLongTouch) {
-                    // 롱터치가 발동한 경우, 일반 click 이벤트가 추가로 뜨는 버그 차단
-                    e.preventDefault();
-                }
-            }, {passive: false});
-            
-            item.addEventListener('touchmove', function() { 
-                if (touchTimer) clearTimeout(touchTimer); 
-            }, {passive: true});
 
             fragment.appendChild(item);
             renderSealState(item, index);
@@ -723,7 +727,9 @@
             sealCounts[index] = current;
             
             const items = document.querySelectorAll('.seal-item');
-            renderSealState(items[index], index);
+            if(items[index]) {
+                renderSealState(items[index], index);
+            }
             
             saveCurrentStatus();
             updateStatusBoard();
@@ -779,7 +785,6 @@
 
         function getStatusString() { return sealCounts.join(','); }
         
-        // 렉 유발 방지: 클릭할 때마다 실시간으로 주소창을 바꾸지 않고 로컬스토리지에만 보관
         function saveCurrentStatus() { 
             localStorage.setItem('pokemon_30th_seal_counts', getStatusString()); 
         }
@@ -800,13 +805,11 @@
             applyFilter('all'); 
         }
         
-        // 사용자가 링크 공유를 원할 때만 최종 가공된 파라미터 URL을 생성
         function copyShareUrl() {
             const statusStr = getStatusString();
             const userStr = encodeURIComponent(userIdInput.value);
             const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}&user=${userStr}`;
             
-            // 주소창 업데이트도 이 시점에 한 번만 동기화
             window.history.replaceState(null, '', shareUrl);
 
             navigator.clipboard.writeText(shareUrl).then(() => {
@@ -815,7 +818,9 @@
         }
 
         function saveAsImage() {
-            // 구조를 지우는 방식 대신 class 제어로 안전하게 타겟만 숨김 (광고 삭제/복구 버그 예방)
+            const backupFilter = currentFilterMode;
+            applyFilter('all');
+
             if (adZoneContainer) adZoneContainer.classList.add('hide-for-capture');
 
             userBoxContainer.classList.add('is-capturing');
@@ -823,7 +828,6 @@
             const originalWidth = pageWrapper.style.width;
             pageWrapper.style.width = '1200px';
 
-            // html2canvas 백그라운드 렌더링을 돕기 위해 강제 리플로우 유도
             document.body.style.display = 'none';
             document.body.offsetHeight; 
             document.body.style.display = '';
@@ -837,7 +841,7 @@
             }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const username = userIdInput.value.trim() || '포켓몬';
-                let filterLabel = currentFilterMode === 'duplicate' ? "중복목록" : (currentFilterMode === 'missing' ? "위시리스트" : "전체현황");
+                let filterLabel = backupFilter === 'duplicate' ? "중복목록" : (backupFilter === 'missing' ? "위시리스트" : "전체현황");
 
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
                 if (isIOS) {
@@ -850,17 +854,19 @@
                     link.click();
                 }
                 
-                // 완벽한 후처리 복구
                 if (adZoneContainer) adZoneContainer.classList.remove('hide-for-capture');
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
+                
+                applyFilter(backupFilter);
             }).catch(err => {
                 console.error(err);
                 if (adZoneContainer) adZoneContainer.classList.remove('hide-for-capture');
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
+                applyFilter(backupFilter);
             });
         }
 
