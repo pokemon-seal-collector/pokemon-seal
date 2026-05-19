@@ -241,11 +241,11 @@
             color: white !important;
         }
 
-        .btn {
+       .btn {
             background-color: var(--pokemon-blue); 
             color: white !important; 
             border: none;
-            padding: 12px 10px; 
+            padding: 12px 6px; /* 좌우 패딩을 10px에서 6px로 줄여 여유 공간 확보 */
             font-size: 14px; 
             font-weight: bold;
             border-radius: 8px; 
@@ -255,6 +255,8 @@
             align-items: center;
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            white-space: nowrap; /* 글자가 아래로 꺾여서 두 줄이 되는 것 방지 */
+            word-break: keep-all; /* 단어 단위로 깔끔하게 유지 */
         }
         .btn:active { transform: scale(0.98); }
         .btn.save { background-color: var(--pokemon-red); }
