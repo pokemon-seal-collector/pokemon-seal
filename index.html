@@ -824,9 +824,6 @@
         }
 
         function saveAsImage() {
-            const backupFilter = currentFilterMode;
-            applyFilter('all');
-
             if (adZoneContainer) adZoneContainer.classList.add('hide-for-capture');
 
             userBoxContainer.classList.add('is-capturing');
@@ -847,7 +844,7 @@
             }).then(canvas => {
                 const imgData = canvas.toDataURL('image/png');
                 const username = userIdInput.value.trim() || '포켓몬';
-                let filterLabel = backupFilter === 'duplicate' ? "중복목록" : (backupFilter === 'missing' ? "위시리스트" : "전체현황");
+                let filterLabel = currentFilterMode === 'duplicate' ? "중복목록" : (currentFilterMode === 'missing' ? "위시리스트" : "전체현황");
 
                 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
                 if (isIOS) {
@@ -864,15 +861,12 @@
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
-                
-                applyFilter(backupFilter);
             }).catch(err => {
                 console.error(err);
                 if (adZoneContainer) adZoneContainer.classList.remove('hide-for-capture');
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
-                applyFilter(backupFilter);
             });
         }
 
