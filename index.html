@@ -256,12 +256,34 @@
             justify-content: center;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             text-align: center;
-            word-break: keep-all; /* 모바일에서 단어 단위로 자연스럽게 줄바꿈 */
-            line-height: 1.3;     /* 두 줄 가독성을 위한 줄간격 */
+            word-break: keep-all;
+            line-height: 1.3;
         }
         .btn:active { transform: scale(0.98); }
         .btn.save { background-color: var(--pokemon-red); }
         .btn.share { background-color: var(--pokemon-green); }
+        
+        /* 🔗 공유 버튼 전용: PC와 모바일 통합 정렬 시스템 */
+        .btn.share {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn.share .btn-inner-wrap {
+            display: flex;
+            align-items: flex-start; /* 이모티콘 상단과 텍스트 첫째줄 상단 라인 싱크 맞춤 */
+            text-align: left;        /* 내부 텍스트는 무조건 왼쪽 정렬로 라인 일치 */
+        }
+        .btn.share .icon-part {
+            margin-right: 4px;       /* 이모티콘과 텍스트 영역 가로 공백 */
+            line-height: 1.3;
+            flex-shrink: 0;          /* 이모티콘이 압축되지 않도록 고정 */
+        }
+        .btn.share .text-part {
+            display: inline-block;
+            line-height: 1.3;
+        }
+
         .btn:disabled {
             background-color: #bbb !important;
             color: #666666 !important;
@@ -531,7 +553,12 @@
             <div class="btn-container" data-html2canvas-ignore="true">
                 <button class="btn btn-toggle" id="edit-toggle-btn" onclick="toggleEditMode()">🔒 현재 상태: 잠금 (클릭/수정 불가)</button>
                 <button class="btn save" onclick="saveAsImage()">도감 이미지 저장</button>
-                <button class="btn share" onclick="copyShareUrl()">🔗 현황 링크 복사<br>(주소창 갱신)</button>
+                <button class="btn share" onclick="copyShareUrl()">
+                    <span class="btn-inner-wrap">
+                        <span class="icon-part">🔗</span>
+                        <span class="text-part">현황 링크 복사<br>(주소창 갱신)</span>
+                    </span>
+                </button>
                 <button class="btn btn-clear-all" id="btn-all-clear" onclick="allClear()" disabled>전체 데이터 초기화</button>
             </div>
         </header>
