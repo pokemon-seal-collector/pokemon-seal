@@ -7,7 +7,7 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-P34ZH22K');</script>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>포켓몬 30주년 아트웍 스페셜 띠부씰 도감</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
@@ -276,6 +276,10 @@
             box-sizing: border-box;
             overflow: hidden;
         }
+        /* html2canvas 캡처 시 광고를 안전하게 가리기 위한 클래스 */
+        .ads-banner-zone.hide-for-capture {
+            display: none !important;
+        }
         .ads-banner-zone .ad-label {
             font-size: 10px;
             color: #888 !important;
@@ -347,6 +351,7 @@
             header p { font-size: 12px; }
         }
 
+        /* 강제 PC 레이아웃(캡처용) 적용 시 미디어 쿼리 간섭 완전 차단 */
         .forced-pc-layout .grid-container {
             grid-template-columns: repeat(12, 1fr) !important;
             gap: 6px !important;
@@ -386,7 +391,8 @@
 
         .seal-image-box {
             width: 100%;
-            height: 84%;
+            height: 80%;
+            aspect-ratio: 1 / 1;
             background-image: url('bg-grid.jpg'); 
             background-size: 1200% 900%; 
             background-repeat: no-repeat;
@@ -577,6 +583,7 @@
         const captureTextView = document.getElementById('capture-text-view');
         const userBoxContainer = document.getElementById('user-box-container');
         const pageWrapper = document.getElementById('page-wrapper');
+        const adZoneContainer = document.getElementById('ad-zone-container');
         
         let isLocked = true;
         let sealCounts = new Array(pokemonList.length).fill(0);
@@ -617,6 +624,9 @@
             }
         }
 
+        // 성능 최적화: DocumentFragment를 사용하여 리플로우(Reflow)를 1회로 단축
+        const fragment = document.createDocumentFragment();
+
         pokemonList.forEach((name, index) => {
             const item = document.createElement('div');
             item.className = 'seal-item';
@@ -632,7 +642,8 @@
                 <div class="seal-name">${name}</div>
             `;
             
-            item.addEventListener('click', () => { 
+            // 모바일과 PC 환경의 클릭/터치 이벤트를 꼬이지 않게 일원화
+            item.addEventListener('click', (e) => { 
                 if (isLocked) return;
                 changeSealCount(index, 1);
             });
@@ -644,22 +655,38 @@
                 return false;
             };
 
-            let touchTimer;
+            let touchTimer = null;
+            let isLongTouch = false;
+
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
-                item.oncontextmenu = function(event) { event.preventDefault(); return false; };
+                isLongTouch = false;
                 touchTimer = setTimeout(() => {
+                    isLongTouch = true;
                     changeSealCount(index, -1);
                     if(navigator.vibrate) navigator.vibrate(50);
                 }, 600); 
             }, {passive: true});
 
-            item.addEventListener('touchend', function() { clearTimeout(touchTimer); }, {passive: true});
-            item.addEventListener('touchmove', function() { clearTimeout(touchTimer); }, {passive: true});
+            item.addEventListener('touchend', function(e) { 
+                if (touchTimer) {
+                    clearTimeout(touchTimer); 
+                }
+                if (isLongTouch) {
+                    // 롱터치가 발동한 경우, 일반 click 이벤트가 추가로 뜨는 버그 차단
+                    e.preventDefault();
+                }
+            }, {passive: false});
+            
+            item.addEventListener('touchmove', function() { 
+                if (touchTimer) clearTimeout(touchTimer); 
+            }, {passive: true});
 
-            gridContainer.appendChild(item);
+            fragment.appendChild(item);
             renderSealState(item, index);
         });
+
+        gridContainer.appendChild(fragment);
 
         function renderSealState(element, index) {
             const count = sealCounts[index];
@@ -678,7 +705,11 @@
                 element.classList.remove('duplicate');
             }
             
-            if (currentFilterMode === 'all') {
+            if (currentFilterMode === 'duplicate' && count < 2) {
+                element.classList.add('hide-by-filter');
+            } else if (currentFilterMode === 'missing' && count > 0) {
+                element.classList.add('hide-by-filter');
+            } else {
                 element.classList.remove('hide-by-filter');
             }
         }
@@ -709,13 +740,7 @@
 
             const items = document.querySelectorAll('.seal-item');
             items.forEach((item, index) => {
-                const count = sealCounts[index];
-                item.classList.remove('hide-by-filter');
-                if (currentFilterMode === 'duplicate' && count < 2) {
-                    item.classList.add('hide-by-filter'); 
-                } else if (currentFilterMode === 'missing' && count > 0) {
-                    item.classList.add('hide-by-filter'); 
-                }
+                renderSealState(item, index);
             });
         }
 
@@ -753,7 +778,12 @@
         updateStatusBoard();
 
         function getStatusString() { return sealCounts.join(','); }
-        function saveCurrentStatus() { localStorage.setItem('pokemon_30th_seal_counts', getStatusString()); }
+        
+        // 렉 유발 방지: 클릭할 때마다 실시간으로 주소창을 바꾸지 않고 로컬스토리지에만 보관
+        function saveCurrentStatus() { 
+            localStorage.setItem('pokemon_30th_seal_counts', getStatusString()); 
+        }
+        
         function saveUserId() {
             localStorage.setItem('pokemon_30th_user', userIdInput.value);
             captureTextView.innerText = userIdInput.value;
@@ -770,23 +800,33 @@
             applyFilter('all'); 
         }
         
+        // 사용자가 링크 공유를 원할 때만 최종 가공된 파라미터 URL을 생성
         function copyShareUrl() {
             const statusStr = getStatusString();
             const userStr = encodeURIComponent(userIdInput.value);
             const shareUrl = `${window.location.origin}${window.location.pathname}?data=${statusStr}&user=${userStr}`;
+            
+            // 주소창 업데이트도 이 시점에 한 번만 동기화
+            window.history.replaceState(null, '', shareUrl);
+
             navigator.clipboard.writeText(shareUrl).then(() => {
                 alert('현재 수집 현황 링크가 복사되었습니다!');
             }).catch(err => { prompt('아래 링크를 복사해서 공유하세요:', shareUrl); });
         }
 
         function saveAsImage() {
-            const adZone = document.getElementById('ad-zone-container');
-            if(adZone) adZone.style.display = 'none';
+            // 구조를 지우는 방식 대신 class 제어로 안전하게 타겟만 숨김 (광고 삭제/복구 버그 예방)
+            if (adZoneContainer) adZoneContainer.classList.add('hide-for-capture');
 
             userBoxContainer.classList.add('is-capturing');
             pageWrapper.classList.add('forced-pc-layout');
             const originalWidth = pageWrapper.style.width;
             pageWrapper.style.width = '1200px';
+
+            // html2canvas 백그라운드 렌더링을 돕기 위해 강제 리플로우 유도
+            document.body.style.display = 'none';
+            document.body.offsetHeight; 
+            document.body.style.display = '';
 
             html2canvas(pageWrapper, {
                 useCORS: true,
@@ -810,26 +850,24 @@
                     link.click();
                 }
                 
-                if(adZone) adZone.style.display = 'flex';
+                // 완벽한 후처리 복구
+                if (adZoneContainer) adZoneContainer.classList.remove('hide-for-capture');
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
             }).catch(err => {
-                if(adZone) adZone.style.display = 'flex';
+                console.error(err);
+                if (adZoneContainer) adZoneContainer.classList.remove('hide-for-capture');
                 userBoxContainer.classList.remove('is-capturing');
                 pageWrapper.classList.remove('forced-pc-layout');
                 pageWrapper.style.width = originalWidth;
             });
         }
 
-        window.addEventListener('beforeunload', (event) => {
-            if (sealCounts.some(c => c > 0)) {
-                event.preventDefault();
-                event.returnValue = '';
-            }
-        });
-
-        document.addEventListener('contextmenu', event => { if (!isLocked) event.preventDefault(); });
+        document.addEventListener('contextmenu', event => { 
+            if (!isLocked) event.preventDefault(); 
+        }, { passive: false });
+        
         function closeModal() { document.getElementById('save-modal').style.display = 'none'; }
     </script>
 </body>
