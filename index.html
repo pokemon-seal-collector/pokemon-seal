@@ -641,39 +641,45 @@
             
             let touchTimer = null;
             let isLongTouch = false;
-            let blockMouseClick = false; // 🌟 고스트 클릭 원천 제어 플래그 변수
+            let isScrolling = false;     // 스크롤 발생 감지 플래그
+            let blockMouseClick = false; // 고스트 클릭 원천 제어 플래그
 
-            // 1. [하이브리드 지원 터치 이벤트] - 모바일, 패드 및 터치 PC 공통
+            // 1. [터치 이벤트] - 모바일/패드 스크롤 간섭 방지 로직 적용
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
                 isLongTouch = false;
-                blockMouseClick = true; // 터치가 감지되면 이후 들어오는 가짜 마우스 클릭 완전 차단
+                isScrolling = false; // 터치 시작할 때 스크롤 상태 초기화
+                blockMouseClick = true; 
                 
                 touchTimer = setTimeout(() => {
-                    isLongTouch = true;
-                    changeSealCount(index, -1);
-                    if(navigator.vibrate) navigator.vibrate(50);
+                    // 화면을 위아래로 문지르는 중(스크롤)이 아닐 때만 롱터치 인정하여 수량 감소
+                    if (!isScrolling) {
+                        isLongTouch = true;
+                        changeSealCount(index, -1);
+                        if(navigator.vibrate) navigator.vibrate(50);
+                    }
                 }, 600); 
+            }, {passive: true});
+
+            item.addEventListener('touchmove', function() { 
+                isScrolling = true; // 조금이라도 손가락이 이동하면 스크롤 중으로 판단
+                if (touchTimer) clearTimeout(touchTimer); 
             }, {passive: true});
 
             item.addEventListener('touchend', function(e) { 
                 if (isLocked) return;
                 if (touchTimer) clearTimeout(touchTimer); 
                 
-                // iOS 환경 고스트 클릭 디버깅 방지용 하드 가드
-                if (!isLongTouch) {
+                // 단순 스크롤을 내리는 동작이 아니었고, 롱터치도 아니었던 순수 탭(클릭)일 때만 수량 증가
+                if (!isScrolling && !isLongTouch) {
                     changeSealCount(index, 1);
                 }
                 
-                // 터치 동작 종료 직후 마우스 클릭 이벤트가 이중 전파되는 버그 디바운싱 차단
+                // 터치 떼고 난 뒤 발생하는 가짜 클릭 디바운싱 차단
                 setTimeout(() => { blockMouseClick = false; }, 400);
             }, {passive: true});
-            
-            item.addEventListener('touchmove', function() { 
-                if (touchTimer) clearTimeout(touchTimer); 
-            }, {passive: true});
 
-            // 2. [마우스 이벤트] - 데스크톱 및 일반 마우스 클릭 대응
+            // 2. [마우스 이벤트] - 일반 데스크톱 웹 환경 대응
             item.addEventListener('click', (e) => { 
                 if (isLocked || blockMouseClick) return;
                 changeSealCount(index, 1);
