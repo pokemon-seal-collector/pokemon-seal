@@ -43,7 +43,6 @@
         body.simulated-dark-mode .status-board { background-color: #1e1e1e !important; border-color: #444; }
         body.simulated-dark-mode .status-item { color: #bbbbbb !important; border-right: 1px solid #333; }
         body.simulated-dark-mode .status-item .main-value { color: var(--pokemon-yellow) !important; }
-        /* 🛠️ 개선 4: 다크 모드 시 서브 텍스트(총 개수) 가독성 확보 */
         body.simulated-dark-mode .status-item .total-count-label { color: #aaaaaa !important; }
         body.simulated-dark-mode .grid-container { background-color: #1e1e1e !important; }
         body.simulated-dark-mode .seal-item { background-color: #2d2d2d !important; border-color: #444; }
@@ -214,7 +213,6 @@
             min-height: 38px; 
         }
 
-        /* 🛠️ 개선 1: html2canvas 이미지 캡처 전용 가독성 고도화 가드 레이아웃 */
         .forced-pc-layout .status-item .status-value-container {
             display: block !important;
             min-height: auto !important;
@@ -492,6 +490,7 @@
 
         .seal-item.collected::after { opacity: 0; }
 
+        /* 🛠️ 안드로이드 html2canvas 렌더링 글자 처짐 영구 보정 (Flex 배정 및 자식 정렬 고도화) */
         .seal-badge {
             position: absolute;
             top: 4px;
@@ -500,15 +499,25 @@
             color: white !important;
             font-size: 10px;
             font-weight: 850;
-            padding: 2px 5px;
+            padding: 0;
+            width: 24px;
+            height: 15px;
             border-radius: 10px;
             z-index: 10;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
             display: none; 
+            
+            /* 안드로이드 내부 왜곡을 가두기 위한 강력한 정렬 가이드 */
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            line-height: 1 !important;
         }
         
         .seal-item.duplicate .seal-badge {
-            display: block;
+            display: flex !important; /* block 대신 flex 강제 결합 */
         }
         
         .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666 !important; font-weight: 500; }
@@ -700,12 +709,10 @@
             }
         }
 
-        // 🛠️ 개선 2: 파라미터 유효성 안전장치 추가 (비정상적인 개수 유입 시 가드 처리)
         if (urlData) {
             const parsed = urlData.split(',');
             if (parsed.length === pokemonList.length) {
                 sealCounts = parsed.map(v => parseInt(v, 10) || 0);
-                // 🛠️ 개선 3: 파라미터를 들고 인입 시 LocalStorage에 즉시 강제 유연 동기화 (새로고침 증발 방지)
                 setTimeout(() => { saveCurrentStatus(); }, 50);
             } else {
                 loadLocalStorageData();
@@ -753,6 +760,7 @@
             let isLongTouch = false;
             let isScrolling = false;     
             let blockMouseClick = false; 
+            let lastTouchTime = 0; // 🛠️ 안드로이드 중복 터치 차단용 타임스탬프 가드 변수
 
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
@@ -763,6 +771,7 @@
                 touchTimer = setTimeout(() => {
                     if (!isScrolling) {
                         isLongTouch = true;
+                        lastTouchTime = Date.now(); // 🛠️ 감산이 일어난 절대 시점 기록
                         changeSealCount(index, -1);
                         if(navigator.vibrate) navigator.vibrate(50);
                     }
@@ -790,9 +799,16 @@
                 changeSealCount(index, 1);
             });
 
+            // 🛠️ 안드로이드 전용 더블 차감 방지 디바운싱 우클릭 차단 로직 고도화
             item.oncontextmenu = function(e) {
                 if (isLocked) return true;
                 e.preventDefault();
+                
+                // 모바일 롱터치 감산 처리 후 1초 이내에 연속으로 유발되는 마우스 우클릭 가상 이벤트는 전면 거부합니다.
+                if (Date.now() - lastTouchTime < 1000) {
+                    return false;
+                }
+                
                 changeSealCount(index, -1);
                 return false;
             };
