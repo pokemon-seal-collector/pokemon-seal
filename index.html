@@ -42,7 +42,9 @@
         body.simulated-dark-mode header p { color: #aaaaaa !important; }
         body.simulated-dark-mode .status-board { background-color: #1e1e1e !important; border-color: #444; }
         body.simulated-dark-mode .status-item { color: #bbbbbb !important; border-right: 1px solid #333; }
-        body.simulated-dark-mode .status-item .status-value { color: var(--pokemon-yellow) !important; }
+        body.simulated-dark-mode .status-item .main-value { color: var(--pokemon-yellow) !important; }
+        /* 🛠️ 개선 4: 다크 모드 시 서브 텍스트(총 개수) 가독성 확보 */
+        body.simulated-dark-mode .status-item .total-count-label { color: #aaaaaa !important; }
         body.simulated-dark-mode .grid-container { background-color: #1e1e1e !important; }
         body.simulated-dark-mode .seal-item { background-color: #2d2d2d !important; border-color: #444; }
         body.simulated-dark-mode .seal-name { color: #ffffff !important; }
@@ -180,12 +182,12 @@
             background-color: white !important;
             border: 2px solid var(--pokemon-blue);
             border-radius: 10px;
-            padding: 12px;
+            padding: 12px 6px;
             margin-bottom: 18px;
             display: flex;
             justify-content: space-around;
-            align-items: center;
-            gap: 5px;
+            align-items: stretch; 
+            gap: 2px;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.05);
         }
         
@@ -194,30 +196,61 @@
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: flex-start; 
             font-size: 11px;
             font-weight: 700;
             color: #555 !important;
             border-right: 1px solid #eee;
+            text-align: center;
         }
         .status-item:last-child { border-right: none; }
         
-        /* 🎨 html2canvas 가독성 이슈 대응: 자간 분리 및 공백 확보 */
-        .status-item .status-value { 
-            font-size: 16px; 
+        .status-item .status-value-container {
             margin-top: 4px;
-            color: var(--pokemon-blue) !important; 
-            letter-spacing: 0.5px;
-            display: inline-block;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px; 
         }
-        .status-item.percent .status-value { 
+
+        /* 🛠️ 개선 1: html2canvas 이미지 캡처 전용 가독성 고도화 가드 레이아웃 */
+        .forced-pc-layout .status-item .status-value-container {
+            display: block !important;
+            min-height: auto !important;
+        }
+        .forced-pc-layout .status-item .main-value {
+            display: inline-block !important;
+            font-size: 17px !important;
+            padding-right: 3px;
+        }
+        .forced-pc-layout .status-item .total-count-label {
+            display: inline-block !important;
+            font-size: 12px !important;
+            margin-top: 0 !important;
+            vertical-align: baseline;
+        }
+
+        .status-item .main-value { 
+            font-size: 16px; 
+            font-weight: 700;
+            color: var(--pokemon-blue) !important; 
+            letter-spacing: 0.3px;
+            line-height: 1.2;
+        }
+        .status-item.percent .main-value { 
             color: var(--pokemon-red) !important; 
             font-size: 18px; 
         }
+
         .status-item .total-count-label {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 500;
             color: #777 !important;
-            margin-left: 3px;
+            margin-top: 2px;
+            display: block;
+            letter-spacing: -0.2px;
+            line-height: 1.1;
         }
 
         .btn-container { 
@@ -555,15 +588,22 @@
             <div class="status-board">
                 <div class="status-item">
                     수집 종류
-                    <div class="status-value" id="count-collected">0종 <span class="total-count-label">(총 0개)</span></div>
+                    <div class="status-value-container" id="count-collected">
+                        <span class="main-value">0종</span>
+                        <span class="total-count-label">(총 0개)</span>
+                    </div>
                 </div>
                 <div class="status-item">
                     남은 종류
-                    <div class="status-value" id="count-remaining">100종</div>
+                    <div class="status-value-container">
+                        <span class="main-value" id="count-remaining">100종</span>
+                    </div>
                 </div>
                 <div class="status-item percent">
                     수집률
-                    <div class="status-value" id="collection-percent">0%</div>
+                    <div class="status-value-container">
+                        <span class="main-value" id="collection-percent">0%</span>
+                    </div>
                 </div>
             </div>
 
@@ -660,17 +700,34 @@
             }
         }
 
+        // 🛠️ 개선 2: 파라미터 유효성 안전장치 추가 (비정상적인 개수 유입 시 가드 처리)
         if (urlData) {
             const parsed = urlData.split(',');
-            sealCounts = parsed.map(v => parseInt(v, 10) || 0);
+            if (parsed.length === pokemonList.length) {
+                sealCounts = parsed.map(v => parseInt(v, 10) || 0);
+                // 🛠️ 개선 3: 파라미터를 들고 인입 시 LocalStorage에 즉시 강제 유연 동기화 (새로고침 증발 방지)
+                setTimeout(() => { saveCurrentStatus(); }, 50);
+            } else {
+                loadLocalStorageData();
+            }
         } else {
+            loadLocalStorageData();
+        }
+
+        function loadLocalStorageData() {
             const localData = localStorage.getItem('pokemon_30th_seal_counts');
             if (localData) {
-                sealCounts = localData.split(',').map(v => parseInt(v, 10) || 0);
-            } else {
-                const oldData = localStorage.getItem('pokemon_30th_seal');
-                if (oldData) {
-                    sealCounts = oldData.split(',').map(v => v === '1' ? 1 : 0);
+                const parsed = localData.split(',');
+                if (parsed.length === pokemonList.length) {
+                    sealCounts = parsed.map(v => parseInt(v, 10) || 0);
+                    return;
+                }
+            }
+            const oldData = localStorage.getItem('pokemon_30th_seal');
+            if (oldData) {
+                const parsed = oldData.split(',');
+                if (parsed.length === pokemonList.length) {
+                    sealCounts = parsed.map(v => v === '1' ? 1 : 0);
                 }
             }
         }
@@ -845,11 +902,12 @@
             const remainingTypes = totalTypes - collectedTypes;
             const percent = Math.round((collectedTypes / totalTypes) * 100);
             
-            // 📊 중복을 포함한 순수 전체 씰 개수 산출 (배열 내 모든 숫자의 합)
             const totalSealsCount = sealCounts.reduce((sum, count) => sum + count, 0);
 
-            // 렌더링 시 자간과 공백을 줘서 캡처 왜곡 완화
-            document.getElementById('count-collected').innerHTML = `${collectedTypes}종 <span class="total-count-label">(총 ${totalSealsCount}개)</span>`;
+            document.getElementById('count-collected').innerHTML = `
+                <span class="main-value">${collectedTypes}종</span>
+                <span class="total-count-label">(총 ${totalSealsCount}개)</span>
+            `;
             document.getElementById('count-remaining').innerText = remainingTypes + "종";
             document.getElementById('collection-percent').innerText = percent + "%";
         }
