@@ -447,9 +447,7 @@
             user-select: none !important;
         }
 
-        .seal-item .seal-image-box,
-        .seal-item .seal-name,
-        .seal-item .seal-badge {
+        .forced-touch-target {
             pointer-events: none !important; 
         }
 
@@ -490,7 +488,6 @@
 
         .seal-item.collected::after { opacity: 0; }
 
-        /* 🛠️ 안드로이드 html2canvas 텍스트 처짐 버그 근본적 해결 (height, line-height 1:1 절대 고정 및 패딩 해제) */
         .seal-badge {
             position: absolute;
             top: 4px;
@@ -501,9 +498,9 @@
             font-weight: 900;
             padding: 0 !important;
             margin: 0 !important;
-            width: 25px !important;
-            height: 16px !important;
-            line-height: 16px !important; /* 높이와 100% 일치시켜 브라우저 강제 텍스트 수직 중앙 정렬 */
+            width: 24px !important;
+            height: 15px !important;
+            line-height: 15px !important; 
             text-align: center !important;
             border-radius: 10px;
             z-index: 10;
@@ -658,7 +655,7 @@
         <div class="image-container">
             <img id="screenshot-img" src="" alt="도감 현황">
         </div>
-        <button class="close-btn" onclick="closeModal()">창 닫기</button>
+        <button id="modal-close-trigger-btn" class="close-btn">창 닫기</button>
     </div>
 
     <script>
@@ -747,9 +744,9 @@
             const posY = row * (100 / 8); 
 
             item.innerHTML = `
-                <div class="seal-badge" id="badge-${index}">+0</div>
-                <div class="seal-image-box" style="background-position: ${posX}% ${posY}%;"></div>
-                <div class="seal-name">${name}</div>
+                <div class="seal-badge forced-touch-target" id="badge-${index}">+0</div>
+                <div class="seal-image-box forced-touch-target" style="background-position: ${posX}% ${posY}%;"></div>
+                <div class="seal-name forced-touch-target">${name}</div>
             `;
             
             let touchTimer = null;
@@ -757,7 +754,6 @@
             let isScrolling = false;     
             let blockMouseClick = false; 
 
-            // 🛠️ 안드로이드 연쇄 이중감산 방지용 핵심 핸들러 구축
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
                 isLongTouch = false;
@@ -786,14 +782,13 @@
                     changeSealCount(index, 1);
                 }
                 
-                // 터치가 끝난 뒤 마우스 클릭 이벤트 잔상이 발동하지 않도록 시간을 두고 차단막을 유지
                 setTimeout(() => { blockMouseClick = false; }, 400);
                 
                 if (isLongTouch) {
                     e.preventDefault();
                     e.stopPropagation();
                 }
-            }, {passive: false}); // 가드를 위해 passive false 명시
+            }, {passive: false});
 
             item.addEventListener('click', (e) => { 
                 if (isLocked || blockMouseClick) {
@@ -804,19 +799,13 @@
                 changeSealCount(index, 1);
             });
 
-            // 🛠️ 안드로이드에서 롱터치 직후 브라우저가 강제로 에뮬레이트하는 가상 우클릭 신호 완전 진압
             item.oncontextmenu = function(e) {
                 e.preventDefault();
                 e.stopPropagation();
                 
                 if (isLocked) return false;
+                if (blockMouseClick) return false;
                 
-                // 만약 터치 이벤트 기반 가드가 켜져 있는 상태(즉, 모바일 터치 편집 도중)라면 우클릭 로직을 실행하지 않고 패스시킵니다.
-                if (blockMouseClick) {
-                    return false;
-                }
-                
-                // 순수 PC 우클릭 상황에서만 정상 작동
                 changeSealCount(index, -1);
                 return false;
             };
@@ -1039,6 +1028,25 @@
                 pageWrapper.style.width = originalWidth;
             });
         }
+
+        // 🛠️ 핵심 수정: iOS Safari 전용 모달창 이벤트 가로채기 종결용 격리 리스너 선언
+        const closeBtnTrigger = document.getElementById('modal-close-trigger-btn');
+        if (closeBtnTrigger) {
+            // click과 touchend 모든 환경에서 어떠한 가드에도 씹히지 않고 강제로 최우선 실행 처리
+            const forceCloseModal = function(e) {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // 이 모달창 안에서의 닫기 신호는 바깥 도감 터치 레이어와 완전히 절연시킴
+                }
+                document.getElementById('save-modal').style.display = 'none';
+            };
+            closeBtnTrigger.addEventListener('click', forceCloseModal, { passive: false });
+            closeBtnTrigger.addEventListener('touchend', forceCloseModal, { passive: false });
+        }
+
+        document.addEventListener('contextmenu', event => { 
+            if (!isLocked) event.preventDefault(); 
+        }, { passive: false });
     </script>
 </body>
 </html>
