@@ -440,15 +440,10 @@
             padding: 5px;
             box-sizing: border-box;
             box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-            cursor: pointer;
             user-select: none;
             -webkit-touch-callout: none !important;
             -webkit-user-select: none !important;
             user-select: none !important;
-        }
-
-        .forced-touch-target {
-            pointer-events: none !important; 
         }
 
         .seal-item.hide-by-filter {
@@ -462,6 +457,7 @@
             background-image: url('bg-grid.jpg'); 
             background-size: 1200% 900%; 
             background-repeat: no-repeat;
+            pointer-events: none !important;
         }
 
         .seal-name {
@@ -473,6 +469,7 @@
             word-break: keep-all;
             height: 14px;
             line-height: 14px;
+            pointer-events: none !important;
         }
 
         @media (max-width: 480px) {
@@ -488,29 +485,61 @@
 
         .seal-item.collected::after { opacity: 0; }
 
+        /* 🛠️ 기술적 해결책 2: 폰트 여백 버그를 원천 봉쇄하는 이미지 기반 벡터(SVG) 배지 마크업 */
         .seal-badge {
             position: absolute;
             top: 4px;
             right: 4px;
-            background-color: var(--pokemon-red);
-            color: white !important;
-            font-size: 10px;
-            font-weight: 900;
-            padding: 0 !important;
-            margin: 0 !important;
-            width: 24px !important;
-            height: 15px !important;
-            line-height: 15px !important; 
-            text-align: center !important;
-            border-radius: 10px;
             z-index: 10;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+            width: 25px;
+            height: 16px;
             display: none;
-            overflow: hidden;
+            pointer-events: none !important;
         }
         
         .seal-item.duplicate .seal-badge {
             display: block !important;
+        }
+
+        /* 🛠️ 기획안 1: 오터치 예방용 좌우 분할 터치 레이어 시스템 패널 */
+        .touch-control-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none; /* 잠금일 땐 전면 은닉 */
+            grid-template-columns: repeat(2, 1fr);
+            z-index: 5;
+        }
+        
+        /* 편집 모드가 활성화되면 컨트롤 레이어 등장 */
+        .grid-container:not(.locked) .touch-control-panel {
+            display: grid;
+        }
+        
+        .pad-btn {
+            height: 100%;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 900;
+            color: white !important;
+            opacity: 0;
+            transition: background 0.15s, opacity 0.15s;
+            cursor: pointer;
+        }
+        
+        /* 마우스 오버 및 손가락 터치 반응 오버레이 피드백 효과 */
+        .pad-btn.minus-pad:active, .pad-btn.minus-pad:hover {
+            background-color: rgba(227, 53, 13, 0.45);
+            opacity: 1;
+        }
+        .pad-btn.plus-pad:active, .pad-btn.plus-pad:hover {
+            background-color: rgba(40, 167, 69, 0.45);
+            opacity: 1;
         }
         
         .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666 !important; font-weight: 500; }
@@ -583,7 +612,7 @@
             </div>
 
             <p>
-                <span data-html2canvas-ignore="true">편집 모드를 켜고 씰을 클릭해 수량을 늘려보세요!<br>(줄이려면 길게 누르거나 우클릭)<br></span>
+                <span data-html2canvas-ignore="true">편집 모드를 켜면 카드 좌측(-) 우측(+) 터치로 수량 조절이 가능합니다!<br></span>
                 <span>[ 어두운 곳 = 미획득 / 밝은 곳 = 획득 ]</span>
             </p>
             
@@ -743,72 +772,16 @@
             const posX = col * (100 / 11);
             const posY = row * (100 / 8); 
 
+            // 🛠️ 마크업 혁신: 내부 텍스트 노출 제거 및 터치 영역 분할 오버레이 주입
             item.innerHTML = `
-                <div class="seal-badge forced-touch-target" id="badge-${index}">+0</div>
-                <div class="seal-image-box forced-touch-target" style="background-position: ${posX}% ${posY}%;"></div>
-                <div class="seal-name forced-touch-target">${name}</div>
+                <div class="seal-badge" id="badge-${index}"></div>
+                <div class="seal-image-box" style="background-position: ${posX}% ${posY}%;"></div>
+                <div class="seal-name">${name}</div>
+                <div class="touch-control-panel">
+                    <div class="pad-btn minus-pad" onclick="handlePadClick(${index}, -1, event)">-</div>
+                    <div class="pad-btn plus-pad" onclick="handlePadClick(${index}, 1, event)">+</div>
+                </div>
             `;
-            
-            let touchTimer = null;
-            let isLongTouch = false;
-            let isScrolling = false;     
-            let blockMouseClick = false; 
-
-            item.addEventListener('touchstart', function(e) {
-                if (isLocked) return;
-                isLongTouch = false;
-                isScrolling = false; 
-                blockMouseClick = true; 
-                
-                touchTimer = setTimeout(() => {
-                    if (!isScrolling) {
-                        isLongTouch = true;
-                        changeSealCount(index, -1);
-                        if(navigator.vibrate) navigator.vibrate(50);
-                    }
-                }, 600); 
-            }, {passive: true});
-
-            item.addEventListener('touchmove', function() { 
-                isScrolling = true; 
-                if (touchTimer) clearTimeout(touchTimer); 
-            }, {passive: true});
-
-            item.addEventListener('touchend', function(e) { 
-                if (isLocked) return;
-                if (touchTimer) clearTimeout(touchTimer); 
-                
-                if (!isScrolling && !isLongTouch) {
-                    changeSealCount(index, 1);
-                }
-                
-                setTimeout(() => { blockMouseClick = false; }, 400);
-                
-                if (isLongTouch) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                }
-            }, {passive: false});
-
-            item.addEventListener('click', (e) => { 
-                if (isLocked || blockMouseClick) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return;
-                }
-                changeSealCount(index, 1);
-            });
-
-            item.oncontextmenu = function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                if (isLocked) return false;
-                if (blockMouseClick) return false;
-                
-                changeSealCount(index, -1);
-                return false;
-            };
 
             fragment.appendChild(item);
             renderSealState(item, index);
@@ -816,6 +789,15 @@
 
         gridContainer.appendChild(fragment);
 
+        // 🛠️ 직관적인 반반 클릭 제어 로직 핸들러 구축
+        function handlePadClick(index, amount, event) {
+            if (isLocked) return;
+            event.preventDefault();
+            event.stopPropagation();
+            changeSealCount(index, amount);
+        }
+
+        // 🛠️ 캡처 처짐 문제를 완벽 격파하는 동적 SVG 배지 주입 엔진
         function renderSealState(element, index) {
             const count = sealCounts[index];
             const badge = element.querySelector('.seal-badge');
@@ -824,13 +806,23 @@
                 element.classList.add('collected');
                 if (count >= 2) {
                     element.classList.add('duplicate');
-                    badge.innerText = `+${count - 1}`; 
+                    const displayNum = count - 1;
+                    
+                    // html2canvas가 종속성 없이 정중앙에 글자를 벡터로 밀 수 있도록 SVG 소스 동적 주입
+                    badge.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="15" viewBox="0 0 24 15">
+                            <rect width="24" height="15" rx="7.5" fill="#E3350D"/>
+                            <text x="12" y="11" font-family="'Noto Sans KR', sans-serif" font-size="10" font-weight="900" fill="#FFFFFF" text-anchor="middle">+${displayNum}</text>
+                        </svg>
+                    `;
                 } else {
                     element.classList.remove('duplicate');
+                    badge.innerHTML = "";
                 }
             } else {
                 element.classList.remove('collected');
                 element.classList.remove('duplicate');
+                badge.innerHTML = "";
             }
             
             if (currentFilterMode === 'duplicate' && count < 2) {
@@ -1029,14 +1021,12 @@
             });
         }
 
-        // 🛠️ 핵심 수정: iOS Safari 전용 모달창 이벤트 가로채기 종결용 격리 리스너 선언
         const closeBtnTrigger = document.getElementById('modal-close-trigger-btn');
         if (closeBtnTrigger) {
-            // click과 touchend 모든 환경에서 어떠한 가드에도 씹히지 않고 강제로 최우선 실행 처리
             const forceCloseModal = function(e) {
                 if (e) {
                     e.preventDefault();
-                    e.stopPropagation(); // 이 모달창 안에서의 닫기 신호는 바깥 도감 터치 레이어와 완전히 절연시킴
+                    e.stopPropagation();
                 }
                 document.getElementById('save-modal').style.display = 'none';
             };
