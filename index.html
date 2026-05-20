@@ -490,7 +490,7 @@
 
         .seal-item.collected::after { opacity: 0; }
 
-        /* 🛠️ 안드로이드 html2canvas 렌더링 글자 처짐 영구 보정 (Flex 배정 및 자식 정렬 고도화) */
+        /* 🛠️ 안드로이드 html2canvas 텍스트 처짐 버그 근본적 해결 (height, line-height 1:1 절대 고정 및 패딩 해제) */
         .seal-badge {
             position: absolute;
             top: 4px;
@@ -498,26 +498,22 @@
             background-color: var(--pokemon-red);
             color: white !important;
             font-size: 10px;
-            font-weight: 850;
-            padding: 0;
-            width: 24px;
-            height: 15px;
+            font-weight: 900;
+            padding: 0 !important;
+            margin: 0 !important;
+            width: 25px !important;
+            height: 16px !important;
+            line-height: 16px !important; /* 높이와 100% 일치시켜 브라우저 강제 텍스트 수직 중앙 정렬 */
+            text-align: center !important;
             border-radius: 10px;
             z-index: 10;
             box-shadow: 0 2px 4px rgba(0,0,0,0.15);
-            display: none; 
-            
-            /* 안드로이드 내부 왜곡을 가두기 위한 강력한 정렬 가이드 */
             display: none;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            line-height: 1 !important;
+            overflow: hidden;
         }
         
         .seal-item.duplicate .seal-badge {
-            display: flex !important; /* block 대신 flex 강제 결합 */
+            display: block !important;
         }
         
         .footer-notice { margin-top: 15px; text-align: center; font-size: 11px; color: #666 !important; font-weight: 500; }
@@ -760,8 +756,8 @@
             let isLongTouch = false;
             let isScrolling = false;     
             let blockMouseClick = false; 
-            let lastTouchTime = 0; // 🛠️ 안드로이드 중복 터치 차단용 타임스탬프 가드 변수
 
+            // 🛠️ 안드로이드 연쇄 이중감산 방지용 핵심 핸들러 구축
             item.addEventListener('touchstart', function(e) {
                 if (isLocked) return;
                 isLongTouch = false;
@@ -771,7 +767,6 @@
                 touchTimer = setTimeout(() => {
                     if (!isScrolling) {
                         isLongTouch = true;
-                        lastTouchTime = Date.now(); // 🛠️ 감산이 일어난 절대 시점 기록
                         changeSealCount(index, -1);
                         if(navigator.vibrate) navigator.vibrate(50);
                     }
@@ -791,24 +786,37 @@
                     changeSealCount(index, 1);
                 }
                 
+                // 터치가 끝난 뒤 마우스 클릭 이벤트 잔상이 발동하지 않도록 시간을 두고 차단막을 유지
                 setTimeout(() => { blockMouseClick = false; }, 400);
-            }, {passive: true});
+                
+                if (isLongTouch) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, {passive: false}); // 가드를 위해 passive false 명시
 
             item.addEventListener('click', (e) => { 
-                if (isLocked || blockMouseClick) return;
+                if (isLocked || blockMouseClick) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                }
                 changeSealCount(index, 1);
             });
 
-            // 🛠️ 안드로이드 전용 더블 차감 방지 디바운싱 우클릭 차단 로직 고도화
+            // 🛠️ 안드로이드에서 롱터치 직후 브라우저가 강제로 에뮬레이트하는 가상 우클릭 신호 완전 진압
             item.oncontextmenu = function(e) {
-                if (isLocked) return true;
                 e.preventDefault();
+                e.stopPropagation();
                 
-                // 모바일 롱터치 감산 처리 후 1초 이내에 연속으로 유발되는 마우스 우클릭 가상 이벤트는 전면 거부합니다.
-                if (Date.now() - lastTouchTime < 1000) {
+                if (isLocked) return false;
+                
+                // 만약 터치 이벤트 기반 가드가 켜져 있는 상태(즉, 모바일 터치 편집 도중)라면 우클릭 로직을 실행하지 않고 패스시킵니다.
+                if (blockMouseClick) {
                     return false;
                 }
                 
+                // 순수 PC 우클릭 상황에서만 정상 작동
                 changeSealCount(index, -1);
                 return false;
             };
@@ -1031,12 +1039,6 @@
                 pageWrapper.style.width = originalWidth;
             });
         }
-
-        document.addEventListener('contextmenu', event => { 
-            if (!isLocked) event.preventDefault(); 
-        }, { passive: false });
-        
-        function closeModal() { document.getElementById('save-modal').style.display = 'none'; }
     </script>
 </body>
 </html>
